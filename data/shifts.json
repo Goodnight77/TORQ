@@ -1,30 +1,37 @@
 [
   {
-    "name": "Ahmed Ben Salah",
+    "name": "Mohamed Arbi Nsibi",
     "phone": "+21620000001",
     "lang": "ar",
     "skills": ["electromechanical", "general"],
     "on_shift": true
   },
   {
-    "name": "Sonia Trabelsi",
+    "name": "Aziz Sayadi",
     "phone": "+21620000002",
     "lang": "fr",
     "skills": ["packaging", "general"],
     "on_shift": true
   },
   {
-    "name": "Karim Haddad",
+    "name": "Adam Ridene",
     "phone": "+21620000003",
     "lang": "fr",
     "skills": ["electromechanical", "packaging"],
-    "on_shift": false
+    "on_shift": true
   },
   {
-    "name": "John Miller",
+    "name": "Mahdi Bani",
     "phone": "+21620000004",
     "lang": "en",
     "skills": ["general"],
     "on_shift": true
+  },
+  {
+    "name": "Youcef",
+    "phone": "+21620000005",
+    "lang": "fr",
+    "skills": ["electromechanical", "general"],
+    "on_shift": false
   }
 ]
