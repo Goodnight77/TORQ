@@ -41,6 +41,9 @@ qdrant_storage/
 # --- Local SQLite store ---
 *.db
 
+# --- Generated work-order PDFs ---
+data/workorders/
+
 # --- Local-only (not committed) ---
 docs/
 CLAUDE.md
