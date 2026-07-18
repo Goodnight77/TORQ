@@ -1,0 +1,452 @@
+/* ── Page ── */
+
+.page {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background 0.35s, color 0.35s;
+}
+
+/* ── Section header shared ── */
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.sectionTitle {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 34px;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+  letter-spacing: -0.015em;
+  transition: color 0.35s;
+}
+
+.sectionSubtitle {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--text-muted);
+  margin: 0 auto;
+  max-width: 420px;
+  line-height: 1.6;
+  transition: color 0.35s;
+}
+
+.titleBar {
+  width: 40px;
+  height: 3px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  margin: 20px auto 0;
+  transition: background 0.35s;
+}
+
+.sectionInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Hero ── */
+
+.hero {
+  position: relative;
+  padding: 140px 24px 120px;
+  text-align: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.heroBg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 30%, var(--bg-secondary) 0%, transparent 70%);
+  z-index: 0;
+  transition: background 0.35s;
+}
+
+.heroGrid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--border-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 70%);
+  opacity: 0.5;
+  transition: opacity 0.35s;
+}
+
+[data-theme="dark"] .heroGrid {
+  opacity: 0.12;
+}
+
+.heroCorner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-color), transparent);
+  z-index: 1;
+  transition: background 0.35s;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.heroBadge {
+  display: inline-block;
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 100px;
+  padding: 6px 16px;
+  margin-bottom: 28px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color 0.35s, border-color 0.35s;
+}
+
+.heroTitle {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 64px;
+  color: var(--text-primary);
+  margin: 0 0 10px;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  transition: color 0.35s;
+}
+
+.heroTitleAccent {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-muted) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.heroDesc {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 17px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 16px auto 44px;
+  max-width: 540px;
+  transition: color 0.35s;
+}
+
+.heroCta {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px 32px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: transform 0.25s, box-shadow 0.25s, background 0.35s, color 0.35s;
+}
+
+.btnPrimary svg,
+.btnSecondary svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  padding: 14px 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: border-color 0.25s, background 0.25s, color 0.35s;
+}
+
+.btnSecondary:hover {
+  border-color: var(--text-primary);
+  background: var(--surface);
+}
+
+/* ── Stats bar ── */
+
+.statsSection {
+  padding: 0 24px;
+  margin-top: -20px;
+  position: relative;
+  z-index: 2;
+}
+
+.statsInner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.35s, border-color 0.35s, box-shadow 0.35s;
+}
+
+@media (max-width: 640px) {
+  .statsInner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  border-right: 1px solid var(--border-color);
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease, border-color 0.35s;
+}
+
+.stat:last-child {
+  border-right: none;
+}
+
+.statVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.statVisible:nth-child(1) { transition-delay: 0ms; }
+.statVisible:nth-child(2) { transition-delay: 100ms; }
+.statVisible:nth-child(3) { transition-delay: 200ms; }
+.statVisible:nth-child(4) { transition-delay: 300ms; }
+
+.statValue {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 36px;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 6px;
+  transition: color 0.35s;
+}
+
+.statSuffix {
+  font-weight: 500;
+  font-size: 22px;
+  color: var(--text-muted);
+  margin-left: 2px;
+  transition: color 0.35s;
+}
+
+.statLabel {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: color 0.35s;
+}
+
+/* ── Pipeline section ── */
+
+.pipelineSection {
+  padding: 96px 0;
+}
+
+/* ── Features section ── */
+
+.featuresSection {
+  padding: 96px 0;
+  background: var(--bg-secondary);
+  transition: background 0.35s;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+}
+
+/* ── How it works section ── */
+
+.howSection {
+  padding: 96px 0;
+  position: relative;
+}
+
+.howSection::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-color), transparent);
+  transition: background 0.35s;
+}
+
+.steps {
+  max-width: 580px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 20px;
+}
+
+.steps::before {
+  content: "";
+  position: absolute;
+  top: 24px;
+  bottom: 24px;
+  left: 19px;
+  width: 2px;
+  background: var(--border-color);
+  transition: background 0.35s;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  padding: 28px 0;
+  position: relative;
+}
+
+.stepNum {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  position: relative;
+  z-index: 1;
+  transition: background 0.35s, color 0.35s;
+}
+
+.stepBody {
+  padding-top: 6px;
+}
+
+.stepTitle {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  transition: color 0.35s;
+}
+
+.stepDesc {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 0;
+  transition: color 0.35s;
+}
+
+/* ── CTA section ── */
+
+.ctaSection {
+  padding: 120px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctaSection::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, var(--surface) 0%, transparent 70%);
+  pointer-events: none;
+  transition: background 0.35s;
+}
+
+.ctaInner {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.ctaTitle {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 36px;
+  color: var(--text-primary);
+  margin: 0 0 16px;
+  letter-spacing: -0.015em;
+  transition: color 0.35s;
+}
+
+.ctaDesc {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--text-muted);
+  margin: 0 auto 36px;
+  max-width: 400px;
+  line-height: 1.6;
+  transition: color 0.35s;
+}
+
+/* ── Fade-up animation ── */
+
+.fadeUp {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.fadeUpVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
