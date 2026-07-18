@@ -6,6 +6,7 @@ Run:  uv run uvicorn torq.api.main:app --reload
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from torq.api.routes import router
@@ -19,6 +20,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="TORQ - Fault-to-Fix Engine", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # dev: allow the SPA dev server
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(router, prefix="/api")
 
 
