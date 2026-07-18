@@ -6,7 +6,28 @@
 
 [data-theme="dark"] .footer,
 :root:not([data-theme="light"]):not([data-theme="dark"]) .footer {
-  background: #1a1a1a;
+  color: #111111;
+}
+
+[data-theme="dark"] .heading,
+:root:not([data-theme="light"]):not([data-theme="dark"]) .heading {
+  color: #111111;
+}
+
+[data-theme="dark"] .link,
+:root:not([data-theme="light"]):not([data-theme="dark"]) .link {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .link:hover,
+:root:not([data-theme="light"]):not([data-theme="dark"]) .link:hover {
+  color: #000000;
+}
+
+[data-theme="dark"] .bottom,
+:root:not([data-theme="light"]):not([data-theme="dark"]) .bottom {
+  color: rgba(0, 0, 0, 0.4);
+  border-top-color: rgba(0, 0, 0, 0.1);
 }
 
 .inner {
