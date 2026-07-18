@@ -610,6 +610,13 @@ export default function Dashboard() {
     return () => clearInterval(tId);
   }, [load]);
 
+  useEffect(() => {
+    if (!selected && !machineDetail) return;
+    const handler = (e) => { if (e.key === "Escape") { setSelected(null); setMachineDetail(null); } };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selected, machineDetail]);
+
   const act = async (fn, toastMsg, toastType = "success") => {
     setBusy(true);
     try {

@@ -286,7 +286,7 @@
   background: var(--surface);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
   box-shadow: var(--shadow-sm);
   transition: background 0.35s, border-color 0.35s;
 }
@@ -1128,9 +1128,8 @@
     font-size: 12px;
   }
 
-  .table td:last-child,
-  .table th:last-child {
-    display: none;
+  .tableWrap {
+    overflow-x: auto;
   }
 }
 
