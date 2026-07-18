@@ -13,6 +13,7 @@ dependencies = [
     "mcp>=1.28.1",
     "openai>=2.46.0",
     "paho-mqtt>=2.1.0",
+    "psycopg[binary]>=3.2",
     "pydantic-settings>=2.14.2",
     "qdrant-client[fastembed]>=1.18.0",
     "uharfbuzz>=0.55.0",
