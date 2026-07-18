@@ -1,7 +1,7 @@
 """End-to-end pipeline tests (with mocked external dependencies)."""
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from torq.agent.schemas import Diagnosis, WorkOrder
 from torq.pipeline import handle_fault
@@ -68,7 +68,7 @@ class HandleFaultTests(unittest.TestCase):
         _call = self.mock_build.call_args
         assert _call is not None
         _kwargs = _call[1] if _call[1] else {}
-        self.assertNotIn("translate", _kwargs) or self.assertTrue(_kwargs.get("translate", True))
+        self.assertEqual(_kwargs.get("translate"), True)
 
     def test_handle_fault_translate_false(self) -> None:
         wo = self._mock_work_order()

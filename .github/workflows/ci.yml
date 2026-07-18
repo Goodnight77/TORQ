@@ -20,7 +20,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Sync dependencies
-        run: uv sync
+        run: uv sync --dev
 
       - name: Smoke check – PDF generation
         run: uv run python scripts/run_pdf.py
