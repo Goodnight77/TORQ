@@ -17,6 +17,18 @@ const FIX = {
   time_to_fix_min: 30,
 };
 
+// Varied demo faults across skills (E=electromechanical, J=packaging, C/P/A=general)
+// so repeated clicks exercise different machines and route to different techs.
+const SIM_FAULTS = [
+  { fault_code: "E-471", machine: "CM-350 Line 2", context: "Motor tripped after hours running." },
+  { fault_code: "E-201", machine: "CM-350 Line 1", context: "Overcurrent on start, grinding noise." },
+  { fault_code: "J-108", machine: "PK-9 Line 3", context: "Film feed jammed at the roller nip." },
+  { fault_code: "J-233", machine: "PK-9 Line 3", context: "Seal temperature low, weak seals." },
+  { fault_code: "C-207", machine: "Chiller 6", context: "Condenser water flow dropping, efficiency down." },
+  { fault_code: "P-410", machine: "Pump 3", context: "High vibration and bearing noise." },
+  { fault_code: "A-120", machine: "AHU 2", context: "Filter differential pressure over setpoint." },
+];
+
 function Tile({ label, value }) {
   return (
     <div className={styles.tile}>
@@ -34,7 +46,7 @@ function Badge({ status }) {
 const OPEN_STATUS = new Set(["pending", "approved", "dispatched"]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString() : "-");
 
-function MachineDrawer({ machine, workOrders, downtime, onClose, onSelectWorkOrder }) {
+function MachineDrawer({ machine, workOrders, downtime, onClose, onSelectWorkOrder, t }) {
   if (!machine) return null;
   const history = workOrders.filter((w) => w.machine === machine);
   const open = history.filter((w) => OPEN_STATUS.has(w.status));
@@ -44,24 +56,24 @@ function MachineDrawer({ machine, workOrders, downtime, onClose, onSelectWorkOrd
   return (
     <div className={styles.drawer} onClick={onClose}>
       <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
-        <button className={styles.closeBtn} onClick={onClose}>close</button>
+        <button className={styles.closeBtn} onClick={onClose}>{t("dashboard.close")}</button>
         <h3 className={styles.panelTitle}>{machine}</h3>
         <p className={styles.sub}>{model}{location ? ` - ${location}` : ""}</p>
 
         <section className={styles.tiles} style={{ margin: "16px 0" }}>
-          <Tile label="Total downtime" value={`${downtime?.downtime_min ?? 0} min`} />
-          <Tile label="Work orders" value={history.length} />
-          <Tile label="Open faults" value={open.length} />
+          <Tile label={t("dashboard.total_downtime")} value={`${downtime?.downtime_min ?? 0} min`} />
+          <Tile label={t("dashboard.work_orders")} value={history.length} />
+          <Tile label={t("dashboard.open_faults")} value={open.length} />
         </section>
 
-        <div className={styles.langLabel}>Open faults</div>
+        <div className={styles.langLabel}>{t("dashboard.open_faults")}</div>
         {open.length === 0 ? (
-          <p className={styles.muted}>None open.</p>
+          <p className={styles.muted}>{t("dashboard.none_open")}</p>
         ) : (
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
-                <tr><th>ID</th><th>Fault</th><th>Status</th><th>Root cause</th></tr>
+                <tr><th>{t("dashboard.id")}</th><th>{t("dashboard.fault")}</th><th>{t("dashboard.status")}</th><th>{t("dashboard.cause")}</th></tr>
               </thead>
               <tbody>
                 {open.map((w) => (
@@ -77,14 +89,14 @@ function MachineDrawer({ machine, workOrders, downtime, onClose, onSelectWorkOrd
           </div>
         )}
 
-        <div className={styles.langLabel} style={{ marginTop: 24 }}>Work-order history</div>
+        <div className={styles.langLabel} style={{ marginTop: 24 }}>{t("dashboard.work_orders")}</div>
         {history.length === 0 ? (
-          <p className={styles.muted}>No work orders for this machine.</p>
+          <p className={styles.muted}>{t("dashboard.no_work_orders")}</p>
         ) : (
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
-                <tr><th>ID</th><th>Fault</th><th>Status</th><th>Created</th></tr>
+                <tr><th>{t("dashboard.id")}</th><th>{t("dashboard.fault")}</th><th>{t("dashboard.status")}</th><th>{t("dashboard.created")}</th></tr>
               </thead>
               <tbody>
                 {history.map((w) => (
@@ -104,12 +116,12 @@ function MachineDrawer({ machine, workOrders, downtime, onClose, onSelectWorkOrd
   );
 }
 
-function ConfidenceBadge({ confidence }) {
+function ConfidenceBadge({ confidence, t }) {
   if (confidence == null) return null;
   const low = confidence < CONFIDENCE_THRESHOLD;
   return (
     <span className={`${styles.badge} ${low ? styles.lowConfidence : styles.highConfidence}`}>
-      {low ? "Needs human review" : `${(confidence * 100).toFixed(0)}%`}
+      {low ? t("dashboard.needs_review") : `${(confidence * 100).toFixed(0)}%`}
     </span>
   );
 }
@@ -128,7 +140,7 @@ function LiveFeed({ faults, t }) {
     return (
       <div className={styles.feedCard}>
         <div className={styles.feedHead}>{t("dashboard.live_feed")}</div>
-        <div className={styles.feedEmpty}>No recent faults detected</div>
+        <div className={styles.feedEmpty}>{t("dashboard.no_recent_faults")}</div>
       </div>
     );
   }
@@ -238,12 +250,12 @@ function ActivityLog() {
   );
 }
 
-function EvalCard({ data }) {
+function EvalCard({ data, t }) {
   if (!data || !data.configs?.length) return null;
   return (
     <div className={styles.card}>
       <div className={styles.cardHead}>
-        Retrieval quality &mdash; MRR ({data.scenarios} labeled scenarios)
+        {t("dashboard.retrieval_quality")} ({data.scenarios} {t("dashboard.eval_scenarios")})
       </div>
       {data.configs.map((c) => (
         <div className={styles.evalRow} key={c.config}>
@@ -314,9 +326,9 @@ function SavingsCalculator({ metrics, t }) {
           </div>
           <div className={styles.calcNote}>
             {hasRealMetrics ? (
-              <div>*based on measured TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
+              <div>{t("dashboard.based_on_measured")} {torqMttr.toFixed(1)} mins</div>
             ) : (
-              <div>*configure your assumptions above to preview savings</div>
+              <div>{t("dashboard.configure_assumptions")}</div>
             )}
           </div>
         </div>
@@ -325,42 +337,42 @@ function SavingsCalculator({ metrics, t }) {
   );
 }
 
-function TrendChart({ data }) {
+function TrendChart({ data, t }) {
   if (!data || data.length === 0) {
     return (
       <div className={styles.card} style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span className={styles.chartEmpty}>No trend data yet</span>
+        <span className={styles.chartEmpty}>{t("dashboard.no_trend_data")}</span>
       </div>
     );
   }
   return (
     <div className={styles.card}>
-      <div className={styles.cardHead}>Time-to-diagnosis / MTTR trend</div>
+      <div className={styles.cardHead}>{t("dashboard.trend")}</div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
           <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--text-muted)" }} />
           <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} />
           <ReTooltip contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-color)", borderRadius: 8, fontSize: 12 }} />
-          <Line type="monotone" dataKey="diagnosis" stroke="var(--text-primary)" strokeWidth={2} name="Diagnosis (s)" dot={{ r: 3 }} />
-          <Line type="monotone" dataKey="mttr" stroke="#1a8a3a" strokeWidth={2} name="MTTR (min)" dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="diagnosis" stroke="var(--text-primary)" strokeWidth={2} name={t("dashboard.diagnosis_label")} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="mttr" stroke="#1a8a3a" strokeWidth={2} name={t("dashboard.mttr_label")} dot={{ r: 3 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-function FaultsPerMachineChart({ data }) {
+function FaultsPerMachineChart({ data, t }) {
   if (!data || data.length === 0) {
     return (
       <div className={styles.card} style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span className={styles.chartEmpty}>No machine data yet</span>
+        <span className={styles.chartEmpty}>{t("dashboard.no_machine_data")}</span>
       </div>
     );
   }
   return (
     <div className={styles.card}>
-      <div className={styles.cardHead}>Faults per machine</div>
+      <div className={styles.cardHead}>{t("dashboard.faults_per_machine")}</div>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
@@ -374,52 +386,52 @@ function FaultsPerMachineChart({ data }) {
   );
 }
 
-function Drawer({ workOrder, onClose }) {
+function Drawer({ workOrder, onClose, t }) {
   const w = workOrder;
   if (!w) return null;
 
   const meta = [
-    { label: "Status", value: w.status },
-    { label: "Assigned to", value: w.assigned_to },
-    { label: "Confidence", value: w.confidence != null ? `${(w.confidence * 100).toFixed(0)}%` : null },
-    { label: "Created", value: w.created_at ? new Date(w.created_at).toLocaleString() : null },
-    { label: "Resolved", value: w.resolved_at ? new Date(w.resolved_at).toLocaleString() : null },
+    { key: "status", label: t("dashboard.status"), value: w.status },
+    { key: "assigned", label: t("dashboard.assigned"), value: w.assigned_to },
+    { key: "confidence", label: t("dashboard.confidence"), value: w.confidence != null ? `${(w.confidence * 100).toFixed(0)}%` : null },
+    { key: "created", label: t("dashboard.created"), value: w.created_at ? new Date(w.created_at).toLocaleString() : null },
+    { key: "resolved", label: t("dashboard.resolved"), value: w.resolved_at ? new Date(w.resolved_at).toLocaleString() : null },
   ].filter((m) => m.value);
 
   return (
     <div className={styles.drawer} onClick={onClose}>
       <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
-        <button className={styles.closeBtn} onClick={onClose}>close</button>
+        <button className={styles.closeBtn} onClick={onClose}>{t("dashboard.close")}</button>
         <h3 className={styles.panelTitle}>{w.machine} &mdash; {w.fault_code}</h3>
 
         <div className={styles.drawerMeta}>
           {meta.map((m) => (
-            <div key={m.label} className={styles.drawerMetaRow}>
+            <div key={m.key} className={styles.drawerMetaRow}>
               <span className={styles.drawerMetaLabel}>{m.label}</span>
               <span className={styles.drawerMetaVal}>
-                {m.label === "Status" ? <Badge status={m.value} /> : m.value}
+                {m.key === "status" ? <Badge status={m.value} /> : m.value}
               </span>
             </div>
           ))}
-          <ConfidenceBadge confidence={w.confidence} />
+          <ConfidenceBadge confidence={w.confidence} t={t} />
         </div>
 
         <a className={styles.pdfLink} href={`/api/work-orders/${w.id}/pdf`} target="_blank" rel="noreferrer">
-          Download PDF (EN/FR/AR)
+          {t("dashboard.download_pdf")}
         </a>
 
         {w.root_cause && <p className={styles.cause}>{w.root_cause}</p>}
 
         {w.repair_steps && (
           <div className={styles.drawerSection}>
-            <div className={styles.drawerSectionLabel}>Repair steps</div>
+            <div className={styles.drawerSectionLabel}>{t("dashboard.repair_steps")}</div>
             <pre className={styles.drawerPre}>{w.repair_steps}</pre>
           </div>
         )}
 
         {w.parts?.length > 0 && (
           <div className={styles.drawerSection}>
-            <div className={styles.drawerSectionLabel}>Parts</div>
+            <div className={styles.drawerSectionLabel}>{t("dashboard.parts")}</div>
             <ul className={styles.drawerUl}>
               {w.parts.map((p, i) => <li key={i}>{p}</li>)}
             </ul>
@@ -428,7 +440,7 @@ function Drawer({ workOrder, onClose }) {
 
         {w.tools?.length > 0 && (
           <div className={styles.drawerSection}>
-            <div className={styles.drawerSectionLabel}>Tools</div>
+            <div className={styles.drawerSectionLabel}>{t("dashboard.tools")}</div>
             <ul className={styles.drawerUl}>
               {w.tools.map((t, i) => <li key={i}>{t}</li>)}
             </ul>
@@ -437,7 +449,7 @@ function Drawer({ workOrder, onClose }) {
 
         {w.safety_warnings?.length > 0 && (
           <div className={styles.drawerSection}>
-            <div className={styles.drawerSectionLabel}>Safety warnings</div>
+            <div className={styles.drawerSectionLabel}>{t("dashboard.safety")}</div>
             <ul className={styles.drawerUl}>
               {w.safety_warnings.map((s, i) => <li key={i}>{s}</li>)}
             </ul>
@@ -446,7 +458,7 @@ function Drawer({ workOrder, onClose }) {
 
         {w.sources?.length > 0 && (
           <div className={styles.sources}>
-            <div className={styles.sourceLabel}>Grounded in</div>
+            <div className={styles.sourceLabel}>{t("dashboard.grounded_in")}</div>
             <ul>
               {w.sources.map((s, i) => <li key={i}>{s}</li>)}
             </ul>
@@ -455,7 +467,7 @@ function Drawer({ workOrder, onClose }) {
 
         {w.investigation?.length > 0 && (
           <details className={styles.investigation}>
-            <summary>Agent investigation ({w.investigation.length} steps)</summary>
+            <summary>{t("dashboard.agent_investigation")} ({w.investigation.length} steps)</summary>
             <ol>
               {w.investigation.map((s, i) => <li key={i}>{s}</li>)}
             </ol>
@@ -479,11 +491,64 @@ function StatusFilter({ value, onChange, t }) {
   return (
     <select className={styles.filterSelect} value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">{t("dashboard.all_statuses")}</option>
-      <option value="pending">Pending</option>
-      <option value="dispatched">Dispatched</option>
-      <option value="resolved">Resolved</option>
-      <option value="rejected">Rejected</option>
+      <option value="pending">{t("dashboard.pending")}</option>
+      <option value="dispatched">{t("dashboard.dispatched")}</option>
+      <option value="resolved">{t("dashboard.resolved")}</option>
+      <option value="rejected">{t("dashboard.reject")}</option>
     </select>
+  );
+}
+
+function ManualFaultForm({ onReport, busy, t }) {
+  const [open, setOpen] = useState(false);
+  const [machine, setMachine] = useState("");
+  const [faultCode, setFaultCode] = useState("");
+  const [context, setContext] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!machine || !faultCode) return;
+    onReport({ machine, fault_code: faultCode, context });
+    setMachine("");
+    setFaultCode("");
+    setContext("");
+    setOpen(false);
+  };
+
+  return (
+    <div className={styles.manualForm}>
+      <button className={styles.manualFormToggle} onClick={() => setOpen(!open)}>
+        {open ? "−" : "+"} {t("dashboard.report_fault")}
+      </button>
+      {open && (
+        <form className={styles.manualFormBody} onSubmit={handleSubmit}>
+          <input
+            className={styles.manualFormInput}
+            placeholder={t("dashboard.machine_placeholder")}
+            value={machine}
+            onChange={(e) => setMachine(e.target.value)}
+            required
+          />
+          <input
+            className={styles.manualFormInput}
+            placeholder={t("dashboard.fault_code_placeholder")}
+            value={faultCode}
+            onChange={(e) => setFaultCode(e.target.value)}
+            required
+          />
+          <textarea
+            className={styles.manualFormInput}
+            placeholder={t("dashboard.context_placeholder")}
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            rows={2}
+          />
+          <button className={styles.approveBtn} type="submit" disabled={busy}>
+            {t("dashboard.submit_fault")}
+          </button>
+        </form>
+      )}
+    </div>
   );
 }
 
@@ -547,11 +612,7 @@ export default function Dashboard() {
 
   const simulate = () =>
     act(
-      () => api.reportFault({
-        fault_code: "E-471",
-        machine: "CM-350 Line 2",
-        context: "Motor tripped after hours running.",
-      }),
+      () => api.reportFault(SIM_FAULTS[Math.floor(Math.random() * SIM_FAULTS.length)]),
       t("dashboard.toast_simulated")
     );
 
@@ -622,7 +683,7 @@ export default function Dashboard() {
             </>
           ) : (
             <>
-              <EvalCard data={evalData} />
+              <EvalCard data={evalData} t={t} />
               <SavingsCalculator metrics={metrics} t={t} />
             </>
           )}
@@ -635,14 +696,17 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className={styles.grid}>
-            <TrendChart data={trendData} />
-            <FaultsPerMachineChart data={fpmData} />
+            <TrendChart data={trendData} t={t} />
+            <FaultsPerMachineChart data={fpmData} t={t} />
           </div>
         )}
 
-        <button className={styles.simBtn} disabled={busy || loading} onClick={simulate}>
-          {t("dashboard.simulate")}
-        </button>
+        <div className={styles.actionRow}>
+          <button className={styles.simBtn} disabled={busy || loading} onClick={simulate}>
+            {t("dashboard.simulate")}
+          </button>
+          <ManualFaultForm onReport={(msg) => act(() => api.reportFault(msg), t("dashboard.toast_simulated"))} busy={busy} t={t} />
+        </div>
 
         <h2 className={styles.sectionTitle}>{t("dashboard.pending")}</h2>
         <div className={styles.tableWrap}>
@@ -658,7 +722,7 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className={styles.muted}>Loading…</td></tr>
+                <tr><td colSpan={5} className={styles.muted}>{t("dashboard.loading")}</td></tr>
               ) : pending.length === 0 ? (
                 <tr><td colSpan={5} className={styles.muted}>{t("dashboard.queue_empty")}</td></tr>
               ) : (
@@ -666,7 +730,7 @@ export default function Dashboard() {
                   <tr key={w.id}>
                     <td><a className={styles.link} onClick={() => setSelected(w)}>{w.id}</a></td>
                     <td>{w.machine ? <a className={styles.link} onClick={() => setMachineDetail(w.machine)}>{w.machine}</a> : "-"}</td>
-                    <td>{w.fault_code} <ConfidenceBadge confidence={w.confidence} /></td>
+                    <td>{w.fault_code} <ConfidenceBadge confidence={w.confidence} t={t} /></td>
                     <td className={styles.cause}>{w.root_cause}</td>
                     <td className={styles.actions}>
                       <button className={styles.approveBtn} disabled={busy} onClick={() => act(() => api.approve(w.id), `${t("dashboard.toast_approved")} — ${w.id}`)}>
@@ -708,7 +772,7 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className={styles.muted}>Loading…</td></tr>
+                <tr><td colSpan={6} className={styles.muted}>{t("dashboard.loading")}</td></tr>
               ) : filteredAll.length === 0 ? (
                 <tr><td colSpan={6} className={styles.muted}>{t("dashboard.no_orders")}</td></tr>
               ) : (
@@ -733,7 +797,7 @@ export default function Dashboard() {
           </table>
         </div>
 
-        <Drawer workOrder={selected} onClose={() => setSelected(null)} />
+        <Drawer workOrder={selected} onClose={() => setSelected(null)} t={t} />
 
         <MachineDrawer
           machine={machineDetail}
@@ -744,6 +808,7 @@ export default function Dashboard() {
             setMachineDetail(null);
             setSelected(w);
           }}
+          t={t}
         />
 
         <p className={styles.footer}>{t("dashboard.footer")}</p>

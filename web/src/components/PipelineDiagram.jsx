@@ -1,14 +1,17 @@
+import { useI18n } from "../i18n";
 import styles from "./PipelineDiagram.module.css";
 
-const steps = [
-  { label: "1. Machine", desc: "Fault code emitted" },
-  { label: "2. TORQ Agent", desc: "AI diagnoses" },
-  { label: "3. Work Order", desc: "Trilingual PDF" },
-  { label: "4. Supervisor", desc: "Approval queue" },
-  { label: "5. Technician", desc: "Dispatched" },
-];
-
 export default function PipelineDiagram() {
+  const { t } = useI18n();
+
+  const steps = [
+    { label: t("pipeline.step_1_label"), desc: t("pipeline.step_1_desc") },
+    { label: t("pipeline.step_2_label"), desc: t("pipeline.step_2_desc") },
+    { label: t("pipeline.step_3_label"), desc: t("pipeline.step_3_desc") },
+    { label: t("pipeline.step_4_label"), desc: t("pipeline.step_4_desc") },
+    { label: t("pipeline.step_5_label"), desc: t("pipeline.step_5_desc") },
+  ];
+
   return (
     <div className={styles.wrapper}>
       {/* Desktop / Tablet View */}

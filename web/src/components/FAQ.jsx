@@ -1,39 +1,20 @@
 import { useState } from "react";
+import { useI18n } from "../i18n";
 import styles from "./FAQ.module.css";
 
-const items = [
-  {
-    q: "What is TORQ?",
-    a: "TORQ is an event-driven predictive-maintenance pipeline. When a machine faults, the AI autonomously diagnoses the root cause, generates a trilingual work order, and dispatches the right technician \u2014 all in real time.",
-  },
-  {
-    q: "How does the AI diagnosis work?",
-    a: "Hybrid search (dense + BM25 sparse + reranker) retrieves relevant manuals and past repairs. A reasoning LLM produces the diagnosis with grounded citations.",
-  },
-  {
-    q: "What machines are supported?",
-    a: "Any machine with a PLC or SCADA that emits fault codes over MQTT. Demo scenarios include conveyor motors and packaging units.",
-  },
-  {
-    q: "How do I integrate TORQ with my plant?",
-    a: "Publish MachineFaultEvent JSON to the configured MQTT topic. The edge gateway script (scripts/mqtt_gateway.py) bridges Modbus and OPC-UA.",
-  },
-  {
-    q: "Is my data secure?",
-    a: "TORQ runs on your infrastructure. LLM calls go to your endpoint. Vector DB can be self-hosted. No data leaves your network.",
-  },
-  {
-    q: "What languages are supported?",
-    a: "English, French, and Arabic (trilingual work-order PDF). Dashboard and API in English.",
-  },
-  {
-    q: "Is this production-ready?",
-    a: "Hackathon prototype demonstrating the architecture. Production deployment requires hardening, auth, and scalability testing.",
-  },
-];
-
 export default function FAQ({ dark }) {
+  const { t } = useI18n();
   const [openIndex, setOpenIndex] = useState(null);
+
+  const items = [
+    { q: t("faq.q1"), a: t("faq.a1") },
+    { q: t("faq.q2"), a: t("faq.a2") },
+    { q: t("faq.q3"), a: t("faq.a3") },
+    { q: t("faq.q4"), a: t("faq.a4") },
+    { q: t("faq.q5"), a: t("faq.a5") },
+    { q: t("faq.q6"), a: t("faq.a6") },
+    { q: t("faq.q7"), a: t("faq.a7") },
+  ];
 
   return (
     <div className={`${styles.faq} ${dark ? styles.dark : ""}`}>

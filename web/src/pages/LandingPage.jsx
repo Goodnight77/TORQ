@@ -3,40 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar.jsx";
 import PipelineDiagram from "../components/PipelineDiagram.jsx";
 import FeatureCard from "../components/FeatureCard.jsx";
-import { IconDiagnosis, IconDocument, IconPin, IconRefresh, IconArrowRight, IconArrowDown } from "../components/icons.jsx";
+import { IconDiagnosis, IconDocument, IconPin, IconRefresh, IconBroadcast, IconArrowRight, IconArrowDown } from "../components/icons.jsx";
 import Footer from "../components/Footer.jsx";
+import { useI18n } from "../i18n.jsx";
 import styles from "./LandingPage.module.css";
-
-const features = [
-  {
-    icon: <IconDiagnosis />,
-    title: "AI Diagnosis",
-    description: "Hybrid search across manuals and repair history pinpoints root causes in seconds, not hours.",
-  },
-  {
-    icon: <IconDocument />,
-    title: "Trilingual Work Orders",
-    description: "Every work order auto-generates in English, French, and Arabic as a downloadable PDF.",
-  },
-  {
-    icon: <IconPin />,
-    title: "Smart Dispatch",
-    description: "Routes the right technician based on skill, location, and availability.",
-  },
-  {
-    icon: <IconRefresh />,
-    title: "Self Learning",
-    description: "Every fix enriches the knowledge base. The model gets smarter with each resolved fault.",
-  },
-];
-
-const stats = [
-  { value: "99.2", suffix: "%", label: "Diagnosis accuracy" },
-  { value: "47", suffix: "s", label: "Avg time to diagnose" },
-  { value: "1,240", suffix: "+", label: "Faults resolved" },
-  { value: "12", suffix: "x", label: "Faster than manual triage" },
-  { value: "0", suffix: "", label: "Data leakage" },
-];
 
 function useInView(threshold = 0.15) {
   const ref = useRef(null);
@@ -96,11 +66,48 @@ function SectionTitle({ children, subtitle }) {
 }
 
 export default function LandingPage() {
+  const { t } = useI18n();
   const [statsRef, statsVisible] = useInView(0.3);
   const [pipelineRef, pipelineVisible] = useInView(0.1);
   const [featuresRef, featuresVisible] = useInView(0.1);
   const [stepsRef, stepsVisible] = useInView(0.1);
   const [problemsRef, problemsVisible] = useInView(0.1);
+
+  const features = [
+    {
+      icon: <IconDiagnosis />,
+      title: t("landing.feature_1_title"),
+      description: t("landing.feature_1_desc"),
+    },
+    {
+      icon: <IconDocument />,
+      title: t("landing.feature_2_title"),
+      description: t("landing.feature_2_desc"),
+    },
+    {
+      icon: <IconPin />,
+      title: t("landing.feature_3_title"),
+      description: t("landing.feature_3_desc"),
+    },
+    {
+      icon: <IconRefresh />,
+      title: t("landing.feature_4_title"),
+      description: t("landing.feature_4_desc"),
+    },
+    {
+      icon: <IconBroadcast />,
+      title: t("landing.feature_5_title"),
+      description: t("landing.feature_5_desc"),
+    },
+  ];
+
+  const stats = [
+    { value: "99.2", suffix: "%", label: t("landing.stat_diag_accuracy") },
+    { value: "47", suffix: "s", label: t("landing.stat_avg_time") },
+    { value: "1,240", suffix: "+", label: t("landing.stat_faults_resolved") },
+    { value: "12", suffix: "x", label: t("landing.stat_faster") },
+    { value: "0", suffix: "", label: t("landing.stat_data_leakage") },
+  ];
 
   return (
     <div className={styles.page}>
@@ -111,21 +118,21 @@ export default function LandingPage() {
         <div className={styles.heroBg} />
         <div className={styles.heroGrid} />
         <div className={styles.heroContent}>
-          <span className={styles.heroBadge}>Fault to Fix Engine</span>
+          <span className={styles.heroBadge}>{t("landing.badge")}</span>
           <h1 className={styles.heroTitle}>
-            From fault code<br />
-            <span className={styles.heroTitleAccent}>to fixed.</span>
+            {t("landing.hero_title_1")}<br />
+            <span className={styles.heroTitleAccent}>{t("landing.hero_title_2")}</span>
           </h1>
           <p className={styles.heroDesc}>
-            TORQ autonomously diagnoses machine faults, generates trilingual work orders, and dispatches the right technician all in real time.
+            {t("landing.hero_desc")}
           </p>
           <div className={styles.heroCta}>
             <Link to="/dashboard" className={styles.btnPrimary}>
-              Live Demo
+              {t("landing.cta_demo")}
               <IconArrowRight />
             </Link>
             <a href="#how-it-works" className={styles.btnSecondary}>
-              How it works
+              {t("landing.cta_how")}
               <IconArrowDown />
             </a>
           </div>
@@ -136,20 +143,20 @@ export default function LandingPage() {
       <section className={styles.problemsSection} id="problems">
         <div className={styles.problemsInner}>
           <div className={styles.problemsLeft}>
-            <h2 className={styles.problemsHeadline}>The Hidden Cost of Legacy Downtime</h2>
+            <h2 className={styles.problemsHeadline}>{t("landing.problems_headline")}</h2>
           </div>
           <div className={styles.problemsRight} ref={problemsRef}>
             <div className={`${styles.problemCard} ${styles.fadeUp} ${problemsVisible ? styles.fadeUpVisible : ""}`} style={{ transitionDelay: "0ms" }}>
-              <h3>Hours lost to manual searches</h3>
-              <p>Technicians waste hours digging though dusty, 500 page physical manuals or fragmented PDFs to translate a single PLC fault code.</p>
+              <h3>{t("landing.problem_1_title")}</h3>
+              <p>{t("landing.problem_1_desc")}</p>
             </div>
             <div className={`${styles.problemCard} ${styles.fadeUp} ${problemsVisible ? styles.fadeUpVisible : ""}`} style={{ transitionDelay: "150ms" }}>
-              <h3>The tribal knowledge expiry</h3>
-              <p>Critical maintenance workarounds live only in the heads of senior engineers. When they retire or exit the plant floor, operational wisdom is permanently lost.</p>
+              <h3>{t("landing.problem_2_title")}</h3>
+              <p>{t("landing.problem_2_desc")}</p>
             </div>
             <div className={`${styles.problemCard} ${styles.fadeUp} ${problemsVisible ? styles.fadeUpVisible : ""}`} style={{ transitionDelay: "300ms" }}>
-              <h3>Trilingual friction</h3>
-              <p>Mismatches between machine logs, manufacturer documentation, and technician field languages (English, French, Arabic) create costly communication bottlenecks.</p>
+              <h3>{t("landing.problem_3_title")}</h3>
+              <p>{t("landing.problem_3_desc")}</p>
             </div>
           </div>
         </div>
@@ -166,8 +173,8 @@ export default function LandingPage() {
       {/* ── Pipeline ── */}
       <section className={styles.pipelineSection} id="pipeline" ref={pipelineRef}>
         <div className={styles.sectionInner}>
-          <SectionTitle subtitle="From fault event to resolved work order entirely automated.">
-            How TORQ drives the repair
+          <SectionTitle subtitle={t("landing.pipeline_subtitle")}>
+            {t("landing.pipeline_title")}
           </SectionTitle>
           <div className={`${styles.fadeUp} ${pipelineVisible ? styles.fadeUpVisible : ""}`}>
             <PipelineDiagram />
@@ -178,8 +185,8 @@ export default function LandingPage() {
       {/* ── Features ── */}
       <section className={styles.featuresSection} id="features" ref={featuresRef}>
         <div className={styles.sectionInner}>
-          <SectionTitle subtitle="Built for the factory floor. No frills. No latency.">
-            Features
+          <SectionTitle subtitle={t("landing.features_subtitle")}>
+            {t("landing.features_title")}
           </SectionTitle>
           <div className={`${styles.featureGrid} ${styles.fadeUp} ${featuresVisible ? styles.fadeUpVisible : ""}`}>
             {features.map((f, i) => (
@@ -192,29 +199,29 @@ export default function LandingPage() {
       {/* ── How it works ── */}
       <section className={styles.howSection} id="how-it-works" ref={stepsRef}>
         <div className={styles.sectionInner}>
-          <SectionTitle subtitle="Three steps from alarm to resolution.">
-            How it works
+          <SectionTitle subtitle={t("landing.how_subtitle")}>
+            {t("landing.how_title")}
           </SectionTitle>
           <div className={`${styles.steps} ${styles.fadeUp} ${stepsVisible ? styles.fadeUpVisible : ""}`}>
             <div className={styles.step}>
               <span className={styles.stepNum}>1</span>
               <div className={styles.stepBody}>
-                <h3 className={styles.stepTitle}>Fault arrives via MQTT</h3>
-                <p className={styles.stepDesc}>Machine emits a fault code to the TORQ edge gateway. The event is ingested and enriched with machine context in milliseconds.</p>
+                <h3 className={styles.stepTitle}>{t("landing.step_1_title")}</h3>
+                <p className={styles.stepDesc}>{t("landing.step_1_desc")}</p>
               </div>
             </div>
             <div className={styles.step}>
               <span className={styles.stepNum}>2</span>
               <div className={styles.stepBody}>
-                <h3 className={styles.stepTitle}>AI diagnoses against manuals + history</h3>
-                <p className={styles.stepDesc}>Hybrid search (dense + BM25 + reranker) retrieves relevant documentation. A reasoning LLM produces a grounded diagnosis with citations.</p>
+                <h3 className={styles.stepTitle}>{t("landing.step_2_title")}</h3>
+                <p className={styles.stepDesc}>{t("landing.step_2_desc")}</p>
               </div>
             </div>
             <div className={styles.step}>
               <span className={styles.stepNum}>3</span>
               <div className={styles.stepBody}>
-                <h3 className={styles.stepTitle}>Supervisor approves &rarr; technician routed</h3>
-                <p className={styles.stepDesc}>The trilingual work order lands in the dashboard queue. One click to approve. The technician is dispatched with full context.</p>
+                <h3 className={styles.stepTitle}>{t("landing.step_3_title")}</h3>
+                <p className={styles.stepDesc}>{t("landing.step_3_desc")}</p>
               </div>
             </div>
           </div>
@@ -251,10 +258,10 @@ export default function LandingPage() {
       {/* ── CTA ── */}
       <section className={styles.ctaSection}>
         <div className={styles.ctaInner}>
-          <h2 className={styles.ctaTitle}>Ready to see it in action?</h2>
-          <p className={styles.ctaDesc}>Launch the live dashboard to watch faults flow through the pipeline in real time.</p>
+          <h2 className={styles.ctaTitle}>{t("landing.cta_title")}</h2>
+          <p className={styles.ctaDesc}>{t("landing.cta_desc")}</p>
           <Link to="/dashboard" className={styles.btnPrimary}>
-            Launch Dashboard
+            {t("landing.cta_launch")}
             <IconArrowRight />
           </Link>
         </div>

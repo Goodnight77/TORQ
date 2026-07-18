@@ -10,7 +10,7 @@ const LANGS = [
 ];
 
 export default function Navbar() {
-  const { locale, changeLocale } = useI18n();
+  const { locale, changeLocale, t } = useI18n();
 
   return (
     <nav className={styles.nav}>
@@ -34,9 +34,9 @@ export default function Navbar() {
           <a href="#pipeline" className={styles.link}>Pipeline</a>
           <a href="#features" className={styles.link}>Features</a>
           <a href="#how-it-works" className={styles.link}>How it works</a>
-          <Link to="/dashboard" className={styles.link}>Dashboard</Link>
         </div>
         <div className={styles.right}>
+          <Link to="/dashboard" className={styles.link}>{t("navbar.dashboard")}</Link>
           <div className={styles.langGroup}>
             {LANGS.map((l) => (
               <button
