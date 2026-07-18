@@ -35,6 +35,7 @@ const stats = [
   { value: "47", suffix: "s", label: "Avg time to diagnose" },
   { value: "1,240", suffix: "+", label: "Faults resolved" },
   { value: "12", suffix: "x", label: "Faster than manual triage" },
+  { value: "0", suffix: "", label: "Data leakage" },
 ];
 
 function useInView(threshold = 0.15) {
@@ -99,6 +100,7 @@ export default function LandingPage() {
   const [pipelineRef, pipelineVisible] = useInView(0.1);
   const [featuresRef, featuresVisible] = useInView(0.1);
   const [stepsRef, stepsVisible] = useInView(0.1);
+  const [problemsRef, problemsVisible] = useInView(0.1);
 
   return (
     <div className={styles.page}>
@@ -131,7 +133,28 @@ export default function LandingPage() {
         <div className={styles.heroCorner} />
       </section>
 
-      {/* ── Stats ── */}
+      <section className={styles.problemsSection} id="problems">
+        <div className={styles.problemsInner}>
+          <div className={styles.problemsLeft}>
+            <h2 className={styles.problemsHeadline}>The Hidden Cost of Legacy Downtime</h2>
+          </div>
+          <div className={styles.problemsRight} ref={problemsRef}>
+            <div className={`${styles.problemCard} ${styles.fadeUp} ${problemsVisible ? styles.fadeUpVisible : ""}`} style={{ transitionDelay: "0ms" }}>
+              <h3>Hours lost to manual searches</h3>
+              <p>Technicians waste hours digging though dusty, 500 page physical manuals or fragmented PDFs to translate a single PLC fault code.</p>
+            </div>
+            <div className={`${styles.problemCard} ${styles.fadeUp} ${problemsVisible ? styles.fadeUpVisible : ""}`} style={{ transitionDelay: "150ms" }}>
+              <h3>The tribal knowledge expiry</h3>
+              <p>Critical maintenance workarounds live only in the heads of senior engineers. When they retire or exit the plant floor, operational wisdom is permanently lost.</p>
+            </div>
+            <div className={`${styles.problemCard} ${styles.fadeUp} ${problemsVisible ? styles.fadeUpVisible : ""}`} style={{ transitionDelay: "300ms" }}>
+              <h3>Trilingual friction</h3>
+              <p>Mismatches between machine logs, manufacturer documentation, and technician field languages (English, French, Arabic) create costly communication bottlenecks.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className={styles.statsSection} ref={statsRef}>
         <div className={styles.statsInner}>
           {stats.map((s, i) => (
