@@ -139,12 +139,12 @@ async def event_stream(request: Request):
     """SSE endpoint: streams incoming MachineFaultEvent in real-time."""
 
     async def generate():
-        idx = 0
+        last_seq = 0
         while True:
-            recent = list(live.RECENT_FAULTS)
-            for event in recent[idx:]:
-                yield f"event: fault\ndata: {json.dumps(event)}\n\n"
-            idx = len(recent)
+            for seq, event in list(live.RECENT_FAULTS):
+                if seq > last_seq:
+                    yield f"event: fault\ndata: {json.dumps(event)}\n\n"
+                    last_seq = seq
             if await request.is_disconnected():
                 break
             await asyncio.sleep(0.5)
@@ -155,7 +155,7 @@ async def event_stream(request: Request):
 @router.get("/events/recent")
 def recent_events():
     """Return the last 50 MachineFaultEvent dicts."""
-    return list(live.RECENT_FAULTS)
+    return [event for _seq, event in live.RECENT_FAULTS]
 
 
 @router.get("/eval")

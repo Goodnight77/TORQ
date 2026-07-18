@@ -49,6 +49,8 @@ def handle_payload(payload: bytes) -> WorkOrder | None:
 
 def _on_connect(client, userdata, flags, reason_code, properties=None) -> None:
     if reason_code == 0:
+        # QoS 0 is at-most-once, so a fault can be dropped silently. Bump to
+        # qos=1 (here and on the publisher) if lost faults matter.
         client.subscribe(settings.mqtt_topic, qos=0)
         print(f"[MQTT] subscribed to {settings.mqtt_topic}")
     else:
@@ -62,6 +64,9 @@ def _on_disconnect(client, userdata, disconnect_flags, reason, properties) -> No
 
 
 def _on_message(client, userdata, msg) -> None:
+    # Runs the full diagnosis pipeline synchronously in paho's network thread.
+    # Fine at demo fault rates; if messages pile up or keepalive stalls, hand
+    # payloads to a worker queue and return here immediately.
     handle_payload(msg.payload)
 
 

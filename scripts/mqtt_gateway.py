@@ -103,9 +103,13 @@ def run(source: Path, interval: float = 10.0) -> None:
         while True:
             entries = _read_modbus() if str(source) == "modbus" else _read_source(source)
             for entry in entries:
-                fingerprint = f"{entry.get('machine_id','')}:{entry.get('fault_code','')}"
+                # Fingerprint the full entry, not just machine+code: two rows
+                # with the same machine and code but different context/severity
+                # are distinct faults (e.g. a recurring overtemp) and must both
+                # publish. Bounded by the number of distinct rows in the source.
+                fingerprint = json.dumps(entry, sort_keys=True)
                 if fingerprint in sent:
-                    continue  # skip duplicates
+                    continue  # skip rows already published this run
                 event = MachineFaultEvent(
                     machine_id=entry["machine_id"],
                     fault_code=entry["fault_code"],

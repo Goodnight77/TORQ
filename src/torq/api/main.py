@@ -160,7 +160,7 @@ async function load(){
   document.getElementById('pending').innerHTML =
     '<tr><th>ID</th><th>Machine</th><th>Fault</th><th>Root cause</th><th></th></tr>'+
     (pend.length?pend.map(w=>'<tr><td>'+esc(w.id)+'</td><td>'+esc(w.machine)+'</td><td>'+esc(w.fault_code)+'</td>'+
-      '<td>'+(w.root_cause||'').slice(0,60)+'&#8230;</td>'+
+      '<td>'+esc((w.root_cause||'').slice(0,60))+'&#8230;</td>'+
       '<td><button onclick="approve(\''+w.id+'\')">Approve</button>'+
       '<button class="r" onclick="reject(\''+w.id+'\')">Reject</button></td></tr>').join('')
      :'<tr><td colspan=5 style="color:#8b98a5">Queue empty</td></tr>');
@@ -169,7 +169,7 @@ async function load(){
   document.getElementById('all').innerHTML =
     '<tr><th>ID</th><th>Machine</th><th>Fault</th><th>Status</th><th>Assigned</th><th></th></tr>'+
     all.map(w=>'<tr><td>'+esc(w.id)+'</td><td>'+esc(w.machine)+'</td><td>'+esc(w.fault_code)+'</td>'+
-      '<td>'+badge(w.status)+'</td><td>'+(w.assigned_to||'-')+'</td>'+
+      '<td>'+badge(w.status)+'</td><td>'+esc(w.assigned_to||'-')+'</td>'+
       '<td>'+(w.status==='dispatched'?'<button onclick="resolve(\''+w.id+'\')">Mark fixed</button>':'')+'</td></tr>').join('');
 }
 load(); setInterval(load, 4000);
