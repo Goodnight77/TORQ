@@ -1,4 +1,3 @@
-// Thin client for the TORQ REST API (proxied to the FastAPI backend in dev).
 const BASE = "/api";
 
 async function j(path, opts) {
@@ -11,6 +10,12 @@ export const getMetrics = () => j("/metrics");
 export const getEval = () => j("/eval");
 export const getWorkOrders = (status) =>
   j("/work-orders" + (status ? `?status=${status}` : ""));
+
+export const getTrend = () =>
+  j("/metrics/trend").catch(() => null);
+
+export const getFaultsPerMachine = () =>
+  j("/metrics/faults-per-machine").catch(() => null);
 
 export const reportFault = (body) =>
   j("/faults", {

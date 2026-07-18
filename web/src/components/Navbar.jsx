@@ -1,8 +1,17 @@
 import { Link } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle.jsx";
+import { useI18n } from "../i18n";
 import styles from "./Navbar.module.css";
 
+const LANGS = [
+  { code: "en", label: "EN" },
+  { code: "fr", label: "FR" },
+  { code: "ar", label: "AR" },
+];
+
 export default function Navbar() {
+  const { locale, changeLocale } = useI18n();
+
   return (
     <nav className={styles.nav}>
       <div className={styles.inner}>
@@ -18,6 +27,17 @@ export default function Navbar() {
         </Link>
         <div className={styles.right}>
           <Link to="/dashboard" className={styles.link}>Dashboard</Link>
+          <div className={styles.langGroup}>
+            {LANGS.map((l) => (
+              <button
+                key={l.code}
+                className={`${styles.langBtn} ${locale === l.code ? styles.langActive : ""}`}
+                onClick={() => changeLocale(l.code)}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
           <ThemeToggle />
         </div>
       </div>
