@@ -6,19 +6,19 @@
       "config": "A dense-only",
       "hit_at_3": 1.0,
       "hit_at_5": 1.0,
-      "mrr": 0.883
+      "mrr": 1.0
     },
     {
       "config": "B hybrid",
       "hit_at_3": 1.0,
       "hit_at_5": 1.0,
-      "mrr": 0.883
+      "mrr": 0.95
     },
     {
       "config": "C hybrid+rerank",
       "hit_at_3": 1.0,
       "hit_at_5": 1.0,
-      "mrr": 1.0
+      "mrr": 0.95
     }
   ]
 }

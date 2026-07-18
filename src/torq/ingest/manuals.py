@@ -1,24 +1,28 @@
 """OEM manual ingestion: read manuals, chunk, embed (fastembed), index in Qdrant."""
 
+from functools import lru_cache
 from pathlib import Path
+
+from chonkie import RecursiveChunker
 
 from torq.config import settings
 from torq.ingest import index_docs
 
 
+@lru_cache(maxsize=1)
+def _chunker() -> RecursiveChunker:
+    """Markdown-aware recursive chunker: splits on headers so each fault-code
+    section stays whole (chunk size large enough to keep a section intact)."""
+    try:
+        return RecursiveChunker.from_recipe(
+            "markdown", lang="en", chunk_size=settings.manual_chunk_size
+        )
+    except Exception:  # noqa: BLE001 - recipe unavailable -> plain recursive chunker
+        return RecursiveChunker(chunk_size=settings.manual_chunk_size)
+
+
 def _chunk(text: str) -> list[str]:
-    """Split a manual into chunks on blank lines, merging tiny fragments."""
-    blocks = [b.strip() for b in text.split("\n\n") if b.strip()]
-    chunks: list[str] = []
-    buf = ""
-    for b in blocks:
-        buf = f"{buf}\n\n{b}" if buf else b
-        if len(buf) > 400:  # fixed-size heuristic, tune if recall suffers
-            chunks.append(buf)
-            buf = ""
-    if buf:
-        chunks.append(buf)
-    return chunks
+    return [c.text.strip() for c in _chunker()(text) if c.text.strip()]
 
 
 def ingest_manuals(manuals_dir: Path | None = None) -> int:
