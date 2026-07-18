@@ -10,7 +10,7 @@ const LANGS = [
 ];
 
 export default function Navbar() {
-  const { locale, changeLocale } = useI18n();
+  const { locale, changeLocale, t } = useI18n();
 
   return (
     <nav className={styles.nav}>
@@ -26,7 +26,7 @@ export default function Navbar() {
           </svg>
         </Link>
         <div className={styles.right}>
-          <Link to="/dashboard" className={styles.link}>Dashboard</Link>
+          <Link to="/dashboard" className={styles.link}>{t("navbar.dashboard")}</Link>
           <div className={styles.langGroup}>
             {LANGS.map((l) => (
               <button
