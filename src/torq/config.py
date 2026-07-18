@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # Model for the multi-step (ReAct) agent. Needs tool-calling support, which
     # the reasoner model lacks, so default to the chat model.
     agent_model: str = "deepseek-chat"
-    agent_max_steps: int = 8  # recursion limit for the reason/act loop
+    agent_max_steps: int = 4  # max reason/act rounds before the agent must answer
 
     # Vector DB (Qdrant)
     qdrant_url: str = ""

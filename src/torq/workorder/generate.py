@@ -79,6 +79,7 @@ def build_work_order(
         safety_warnings=diag.safety_warnings,
         required_skill=_required_skill(diag.fault_code),
         sources=diag.sources,
+        investigation=diag.investigation,
         content=content,
         confidence=diag.confidence,
         fault_arrived_at=fault_arrived_at,

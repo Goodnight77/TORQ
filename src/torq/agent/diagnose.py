@@ -159,10 +159,12 @@ def _diagnose_react(fault_code: str, machine: str, context: str) -> Diagnosis:
     from langchain_openai import ChatOpenAI
 
     collected: list[str] = []  # source ids surfaced by tool calls this run
+    steps: list[str] = []  # ordered record of what the agent searched
 
     @tool
     def search_manuals(query: str) -> str:
         """Search the plant's OEM manuals for excerpts relevant to a fault or symptom."""
+        steps.append(f"Searched manuals: {query}")
         txt, src = _join_manuals(_fetch_manuals(query))
         collected.extend(src)
         return txt or "no manual excerpts found"
@@ -170,6 +172,7 @@ def _diagnose_react(fault_code: str, machine: str, context: str) -> Diagnosis:
     @tool
     def search_history(query: str) -> str:
         """Search past repair records for fixes to similar faults."""
+        steps.append(f"Searched repair history: {query}")
         txt, src = _join_history(_fetch_history(query, machine=machine))
         collected.extend(src)
         return txt or "no past repairs found"
@@ -187,6 +190,7 @@ def _diagnose_react(fault_code: str, machine: str, context: str) -> Diagnosis:
     )
     data = _parse_json(result["messages"][-1].content)
     _merge_sources(data, collected)
+    data["investigation"] = steps
     return Diagnosis(fault_code=fault_code, machine=machine, **data)
 
 
@@ -199,6 +203,7 @@ def _diagnose_oneshot(fault_code: str, machine: str, context: str) -> Diagnosis:
 
     manuals_txt, m_src = _join_manuals(_fetch_manuals(query))
     history_txt, h_src = _join_history(_fetch_history(query, machine=machine))
+    steps = [f"Searched manuals: {query}", f"Searched repair history: {query}"]
 
     client = OpenAI(api_key=settings.llm_api_key, base_url=settings.llm_base_url)
     messages = [
@@ -215,6 +220,7 @@ def _diagnose_oneshot(fault_code: str, machine: str, context: str) -> Diagnosis:
         data = _parse_json(resp.choices[0].message.content)
 
     _merge_sources(data, m_src + h_src)
+    data["investigation"] = steps
     return Diagnosis(fault_code=fault_code, machine=machine, **data)
 
 

@@ -281,6 +281,14 @@ export default function Dashboard() {
                   </ul>
                 </div>
               )}
+              {selected.investigation?.length > 0 && (
+                <details className={styles.investigation}>
+                  <summary>Agent investigation ({selected.investigation.length} steps)</summary>
+                  <ol>
+                    {selected.investigation.map((s, i) => <li key={i}>{s}</li>)}
+                  </ol>
+                </details>
+              )}
               {["en", "fr", "ar"].map((lng) =>
                 selected.content?.[lng] ? (
                   <div key={lng} className={styles.langBlock}>

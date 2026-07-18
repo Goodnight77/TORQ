@@ -101,3 +101,4 @@ class TestOneshot:
 
         assert result.root_cause == "worn seal"
         assert result.fault_code == "E-201"
+        assert len(result.investigation) == 2  # manuals + history steps recorded
