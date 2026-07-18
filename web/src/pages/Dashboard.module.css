@@ -581,10 +581,6 @@
   z-index: 200;
 }
 
-[dir="rtl"] .drawer {
-  justify-content: flex-start;
-}
-
 .panel {
   width: min(560px, 92vw);
   height: 100%;
