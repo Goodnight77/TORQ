@@ -63,5 +63,9 @@ class Settings(BaseSettings):
     use_hybrid: bool = True  # dense + BM25 sparse fused with RRF
     use_rerank: bool = True  # cross-encoder rerank of fused candidates
 
+    # MCP knowledge server (agent connects over stdio)
+    mcp_server_command: str = "uv"
+    mcp_server_args: list[str] = ["run", "python", "-m", "torq.mcp.server"]
+
 
 settings = Settings()
