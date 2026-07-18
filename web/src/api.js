@@ -17,6 +17,9 @@ export const getTrend = () =>
 export const getFaultsPerMachine = () =>
   j("/metrics/faults-per-machine").catch(() => null);
 
+export const getRecentActivity = () =>
+  j("/events/activity/recent").catch(() => []);
+
 export const reportFault = (body) =>
   j("/faults", {
     method: "POST",

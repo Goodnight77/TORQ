@@ -750,6 +750,65 @@
   transition: color 0.35s;
 }
 
+/* ── Activity log ── */
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.activityRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-color);
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-size: 13px;
+  transition: border-color 0.35s;
+}
+
+.activityRow:last-child {
+  border-bottom: none;
+}
+
+.activityTime {
+  flex: 0 0 auto;
+  font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.activityStage {
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+}
+
+.activityStage.fault_received { background: rgba(248, 81, 73, 0.14); color: #dc3545; }
+.activityStage.diagnosing { background: rgba(88, 133, 240, 0.14); color: #5885f0; }
+.activityStage.work_order_created { background: rgba(88, 133, 240, 0.14); color: #5885f0; }
+.activityStage.approved { background: rgba(46, 160, 67, 0.14); color: #2ea043; }
+.activityStage.dispatched { background: rgba(46, 160, 67, 0.18); color: #2ea043; }
+.activityStage.dispatch_failed,
+.activityStage.rejected { background: rgba(248, 81, 73, 0.14); color: #dc3545; }
+
+.activityText {
+  flex: 1;
+  color: var(--text-primary);
+  line-height: 1.5;
+  transition: color 0.35s;
+}
+
 /* ── Confidence badge ── */
 
 .lowConfidence {
