@@ -1,0 +1,62 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 40px 28px 32px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.35s, border-color 0.35s;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.iconFrame {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  margin-bottom: 20px;
+  transition: background 0.3s;
+}
+
+.card:hover .iconFrame {
+  background: var(--border-color);
+}
+
+.icon {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  color: var(--text-primary);
+  transition: color 0.35s;
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.title {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-primary);
+  margin: 0 0 10px;
+  transition: color 0.35s;
+}
+
+.desc {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 0 auto;
+  max-width: 270px;
+  transition: color 0.35s;
+}
