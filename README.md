@@ -81,9 +81,25 @@ Use TORQ through its REST API, MQTT listener, React dashboard, or MCP server. Th
 
 ### Prerequisites
 
-- [Python 3.11+](https://www.python.org/)
-- [uv](https://docs.astral.sh/uv/)
+- [Docker](https://docs.docker.com/get-docker/) with Docker Compose for the containerized stack
+- [Python 3.11+](https://www.python.org/) and [uv](https://docs.astral.sh/uv/) for local development
 - Node.js 18+ and npm only for the optional React dashboard
+
+### Run the stack with Docker
+
+Create the environment file once, then start the API and a local Qdrant instance with one command:
+
+```bash
+cp .env.example .env
+# Add LLM_API_KEY to .env for live diagnosis
+docker compose up --build
+```
+
+Open the dashboard at [localhost:8000](http://localhost:8000), the Swagger UI at [localhost:8000/docs](http://localhost:8000/docs), or the Qdrant dashboard at [localhost:6333/dashboard](http://localhost:6333/dashboard). The API reads configuration from `.env`, stores SQLite/work-order data under `data/`, and connects to Qdrant through the Compose network. Qdrant data persists in the `qdrant_data` Docker volume.
+
+Stop the stack with `docker compose down`.
+
+> Live fault submission requires a configured OpenAI-compatible model. The Docker stack does not mock diagnosis when `LLM_API_KEY` is unset.
 
 ### Run the no-key demo
 
@@ -98,7 +114,7 @@ uv run python scripts/run_loop.py
 
 This runs fault submission → approval → dispatch → outcome feedback → metrics without starting a server.
 
-### Run the live API
+### Run the live API locally
 
 ```bash
 cp .env.example .env
