@@ -34,17 +34,6 @@
   transition: color 0.35s;
 }
 
-.err {
-  background: rgba(248, 81, 73, 0.08);
-  color: #dc3545;
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin: 20px 0;
-  font-size: 14px;
-  line-height: 1.5;
-  border: 1px solid rgba(248, 81, 73, 0.2);
-}
-
 /* ── Tiles ── */
 
 .tiles {
@@ -245,7 +234,11 @@
 }
 
 .calcRes b.money {
-  color: var(--text-primary);
+  color: #1a8a3a;
+}
+
+.calcRes b.hours {
+  color: #1a73e8;
 }
 
 .calcResRow {
@@ -437,8 +430,8 @@
 }
 
 .approveBtn {
-  background: var(--text-primary);
-  color: var(--bg-primary);
+  background: #1a8a3a;
+  color: #fff;
   border: none;
   border-radius: 6px;
   padding: 7px 16px;
@@ -447,11 +440,11 @@
   font-weight: 700;
   font-size: 12px;
   letter-spacing: 0.01em;
-  transition: opacity 0.2s, background 0.35s, color 0.35s;
+  transition: opacity 0.2s;
 }
 
 .approveBtn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
@@ -461,26 +454,24 @@
 
 .rejectBtn {
   background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--border-color);
+  color: #dc3545;
+  border: 1px solid #dc3545;
   border-radius: 6px;
   padding: 7px 16px;
   cursor: pointer;
   font-family: "ALTGumbo", system-ui, sans-serif;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 12px;
   margin-left: 8px;
-  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  transition: opacity 0.2s, background 0.2s;
 }
 
 .rejectBtn:hover:not(:disabled) {
-  color: #dc3545;
-  border-color: #dc3545;
-  background: rgba(248, 81, 73, 0.04);
+  background: rgba(248, 81, 73, 0.08);
 }
 
 .rejectBtn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
@@ -606,6 +597,375 @@
 
 .panel pre[dir="rtl"] {
   text-align: right;
+}
+
+/* ── Live fault feed ── */
+
+.feedCard {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.35s, border-color 0.35s;
+}
+
+.feedHead {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+  transition: color 0.35s;
+}
+
+.feedList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.feedItem {
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+  transition: border-color 0.35s;
+}
+
+.feedItem:last-child {
+  border-bottom: none;
+}
+
+.feedDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  margin-top: 6px;
+  flex-shrink: 0;
+  transition: background 0.35s;
+}
+
+.feedBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.feedTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.feedMachine {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: color 0.35s;
+}
+
+.feedCode {
+  font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 2px 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  transition: color 0.35s, background 0.35s;
+}
+
+.feedMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  gap: 12px;
+}
+
+.feedCause {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.35s;
+}
+
+.feedTime {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  opacity: 0.6;
+  transition: color 0.35s;
+}
+
+.feedEmpty {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  padding: 8px 0;
+  text-align: center;
+  transition: color 0.35s;
+}
+
+/* ── Confidence badge ── */
+
+.lowConfidence {
+  background: rgba(248, 81, 73, 0.12);
+  color: #dc3545;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-left: 6px;
+}
+
+.highConfidence {
+  background: rgba(63, 185, 80, 0.12);
+  color: #1a8a3a;
+  font-weight: 600;
+  font-size: 11px;
+  margin-left: 6px;
+}
+
+/* ── Drawer sections ── */
+
+.drawerMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: var(--bg-secondary);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  transition: background 0.35s, border-color 0.35s;
+}
+
+.drawerMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.drawerMetaLabel {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.35s;
+}
+
+.drawerMetaVal {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: color 0.35s;
+}
+
+.drawerSection {
+  margin: 20px 0;
+}
+
+.drawerSectionLabel {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  transition: color 0.35s;
+}
+
+.drawerPre {
+  white-space: pre-wrap;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 14px;
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  color: var(--text-primary);
+  transition: background 0.35s, border-color 0.35s, color 0.35s;
+}
+
+.drawerUl {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.drawerUl li {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 3px 0;
+  transition: color 0.35s;
+}
+
+/* ── Charts ── */
+
+.chartEmpty {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  transition: color 0.35s;
+}
+
+/* ── Toolbar ── */
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.filterSelect {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.35s, border-color 0.35s, color 0.35s;
+}
+
+.searchInput {
+  flex: 1;
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  outline: none;
+  transition: background 0.35s, border-color 0.35s, color 0.35s;
+}
+
+.searchInput:focus {
+  border-color: var(--text-primary);
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* ── Mobile responsive ── */
+
+@media (max-width: 720px) {
+  .app {
+    padding: 0 16px 40px;
+  }
+
+  .header {
+    padding: 24px 0 4px;
+  }
+
+  .heading {
+    font-size: 22px;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .tile {
+    padding: 16px;
+  }
+
+  .tile b {
+    font-size: 24px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .tableWrap {
+    border-radius: 0;
+    margin: 0 -16px;
+    border-left: none;
+    border-right: none;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .panel {
+    width: 100vw;
+    padding: 24px 20px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+  }
+
+  .feedItem {
+    padding: 10px 0;
+  }
+
+  .feedMeta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tiles {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .tile b {
+    font-size: 20px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .table td:last-child,
+  .table th:last-child {
+    display: none;
+  }
 }
 
 /* ── Footer ── */
