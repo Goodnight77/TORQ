@@ -1,4 +1,4 @@
-"""Loop check: exercise the API end-to-end — fault -> approve -> outcome -> metrics.
+"""Loop check: exercise the API end-to-end - fault -> approve -> outcome -> metrics.
 
 Uses FastAPI's in-process TestClient (no server needed).
 Run:  uv run python scripts/run_loop.py

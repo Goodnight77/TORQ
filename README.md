@@ -1,4 +1,4 @@
-# TORQ — Fault-to-Fix Engine
+# TORQ - Fault-to-Fix Engine
 
 **From fault code to fixed.**
 
@@ -34,7 +34,7 @@ uv add <pkg>
 # 4. Configure environment
 cp .env.example .env   # then fill in values
 
-# 5. Run (placeholders — commands land as the build progresses)
+# 5. Run (placeholders - commands land as the build progresses)
 uv run torq ingest     # load manuals + history into the knowledge base
 uv run torq serve      # start the API / event listener
 ```
