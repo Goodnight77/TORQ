@@ -167,6 +167,77 @@ function formatTime(ts, t) {
   return new Date(ts).toLocaleDateString();
 }
 
+const STAGE_LABEL = {
+  fault_received: "Fault detected",
+  diagnosing: "Diagnosing",
+  work_order_created: "Work order ready",
+  approved: "Approved",
+  dispatched: "Dispatched",
+  dispatch_failed: "Dispatch failed",
+  rejected: "Rejected",
+};
+
+function clockTime(ts) {
+  if (!ts) return "";
+  return new Date(ts).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+// Live pipeline log. Backfills from REST, then streams new stages over SSE
+// (EventSource auto-reconnects on drop, so no polling and no manual retry).
+function ActivityLog() {
+  const [entries, setEntries] = useState([]);
+
+  useEffect(() => {
+    let alive = true;
+    api.getRecentActivity().then((rows) => {
+      if (alive && Array.isArray(rows)) setEntries(rows);
+    });
+    const es = new EventSource("/api/events/activity/stream");
+    es.addEventListener("activity", (ev) => {
+      try {
+        const e = JSON.parse(ev.data);
+        setEntries((prev) => [...prev, e].slice(-100));
+      } catch {
+        /* ignore malformed frame */
+      }
+    });
+    return () => {
+      alive = false;
+      es.close();
+    };
+  }, []);
+
+  const rows = [...entries].reverse().slice(0, 20); // newest first
+
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHead}>Activity log</div>
+      {rows.length === 0 ? (
+        <div className={styles.feedEmpty}>No activity yet</div>
+      ) : (
+        <div className={styles.activityList}>
+          {rows.map((e, i) => (
+            <div key={i} className={styles.activityRow}>
+              <span className={styles.activityTime}>{clockTime(e.ts)}</span>
+              <span className={`${styles.activityStage} ${styles[e.stage] || ""}`}>
+                {STAGE_LABEL[e.stage] || e.stage}
+              </span>
+              <span className={styles.activityText}>
+                {e.machine} {e.fault_code}
+                {e.detail ? ` — ${e.detail}` : ""}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EvalCard({ data }) {
   if (!data || !data.configs?.length) return null;
   return (
@@ -540,6 +611,8 @@ export default function Dashboard() {
         </section>
 
         <LiveFeed faults={sortedFaults} t={t} />
+
+        <ActivityLog />
 
         <div className={styles.grid}>
           {loading ? (

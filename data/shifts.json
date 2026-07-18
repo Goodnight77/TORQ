@@ -1,9 +1,23 @@
 [
   {
     "name": "Mohamed Arbi Nsibi",
-    "phone": "+21620000001",
+    "phone": "+21629051246",
     "lang": "ar",
     "skills": ["electromechanical", "general"],
+    "on_shift": true
+  },
+  {
+    "name": "Adam Ridene",
+    "phone": "+21694420276",
+    "lang": "fr",
+    "skills": ["packaging", "general"],
+    "on_shift": true
+  },
+  {
+    "name": "Youcef",
+    "phone": "+21695905163",
+    "lang": "fr",
+    "skills": ["electromechanical", "packaging", "general"],
     "on_shift": true
   },
   {
@@ -11,27 +25,13 @@
     "phone": "+21620000002",
     "lang": "fr",
     "skills": ["packaging", "general"],
-    "on_shift": true
-  },
-  {
-    "name": "Adam Ridene",
-    "phone": "+21620000003",
-    "lang": "fr",
-    "skills": ["electromechanical", "packaging"],
-    "on_shift": true
+    "on_shift": false
   },
   {
     "name": "Mahdi Bani",
     "phone": "+21620000004",
     "lang": "en",
     "skills": ["general"],
-    "on_shift": true
-  },
-  {
-    "name": "Youcef",
-    "phone": "+21620000005",
-    "lang": "fr",
-    "skills": ["electromechanical", "general"],
     "on_shift": false
   }
 ]
