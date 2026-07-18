@@ -130,3 +130,12 @@ class TestFetchHistory:
         result = _fetch_history("E-201", machine="CNC-LatheA")
 
         assert mock_search.call_count == 2
+
+    @patch("torq.agent.diagnose.mcp_search_history")
+    def test_mcp_machine_empty_retry_fails_returns_list(self, mock_mcp):
+        """Machine search empty, then retry fails (None): must return [], never None."""
+        mock_mcp.side_effect = [[], None]
+
+        result = _fetch_history("E-201", machine="CNC-LatheA")
+
+        assert result == []  # not None -> _join_history won't crash

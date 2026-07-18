@@ -69,11 +69,13 @@ def _fetch_history(query: str, machine: str = "") -> list[dict]:
     hits = mcp_search_history(query, limit=settings.top_k, machine=machine)
     if hits is not None:
         log.info("History retrieved via MCP (%d hits)", len(hits))
-        # If machine-specific search returned nothing, retry without filter
+        # If machine-specific search returned nothing, retry without filter.
+        # Keep the original (empty) list if the retry itself fails, so we never
+        # return None to _join_history.
         if not hits and machine:
-            hits = mcp_search_history(query, limit=settings.top_k)
-            if hits is not None:
-                return hits
+            retry = mcp_search_history(query, limit=settings.top_k)
+            if retry:
+                return retry
         return hits
 
     log.warning("MCP unavailable — falling back to direct history search")
