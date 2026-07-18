@@ -1,5 +1,6 @@
 """Runtime settings loaded from the environment / .env file."""
 
+import sys
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -65,6 +66,16 @@ class Settings(BaseSettings):
     top_k: int = 4
     use_hybrid: bool = True  # dense + BM25 sparse fused with RRF
     use_rerank: bool = True  # cross-encoder rerank of fused candidates
+
+    # MCP knowledge server (agent connects over stdio).
+    # use_mcp needs a networked Qdrant (qdrant_url): the embedded on-disk store is
+    # single-process, so the server subprocess cannot open it while the parent holds
+    # the lock. With no qdrant_url the agent skips MCP and retrieves directly.
+    use_mcp: bool = True
+    # Launch with the current interpreter (same venv as the parent) and skip
+    # `uv run`, so each short-lived session does not re-resolve the environment.
+    mcp_server_command: str = sys.executable
+    mcp_server_args: list[str] = ["-m", "torq.mcp.server"]
 
 
 settings = Settings()
