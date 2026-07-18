@@ -1,6 +1,6 @@
-"""Supervisor approval queue (AgentRQ pattern): approve/reject before dispatch."""
+"""Supervisor approval queue: approve/reject before dispatch."""
 
-from torq.agent.schemas import WorkOrder
+from torq.agent.schemas import WorkOrder, _now
 from torq.db import models
 from torq.dispatch import notify, routing
 
@@ -39,5 +39,6 @@ def approve(wo_id: str) -> tuple[WorkOrder, dict] | None:
     delivery = notify.dispatch(wo, tech)
     wo.status = "dispatched"
     wo.assigned_to = tech.get("name")
+    wo.dispatched_at = _now()
     models.save(wo)
     return wo, delivery
