@@ -61,11 +61,13 @@
 [data-theme="dark"] {
   --brand: #FFFFFF;
   --bg-primary: #111111;
-  --bg-secondary: #0A0A0A;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --text-muted: rgba(255, 255, 255, 0.48);
+  --bg-secondary: #1a1a1a;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --text-muted: rgba(255, 255, 255, 0.58);
   --text-primary: #FFFFFF;
-  --surface: rgba(255, 255, 255, 0.04);
+  --surface: rgba(255, 255, 255, 0.06);
+  --skeleton-base: #222222;
+  --skeleton-shine: #333333;
 
   --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.18);
   --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.25);
@@ -77,11 +79,13 @@
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
     --brand: #FFFFFF;
     --bg-primary: #111111;
-    --bg-secondary: #0A0A0A;
-    --border-color: rgba(255, 255, 255, 0.08);
-    --text-muted: rgba(255, 255, 255, 0.48);
+    --bg-secondary: #1a1a1a;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-muted: rgba(255, 255, 255, 0.58);
     --text-primary: #FFFFFF;
-    --surface: rgba(255, 255, 255, 0.04);
+    --surface: rgba(255, 255, 255, 0.06);
+    --skeleton-base: #222222;
+    --skeleton-shine: #333333;
 
     --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.18);
     --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.25);
@@ -184,7 +188,7 @@ button:active { transform: scale(0.97); }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border-color) 50%, var(--bg-secondary) 75%);
+  background: linear-gradient(90deg, var(--skeleton-base, var(--bg-secondary)) 25%, var(--skeleton-shine, var(--border-color)) 50%, var(--skeleton-base, var(--bg-secondary)) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.5s ease-in-out infinite;
   border-radius: 8px;
