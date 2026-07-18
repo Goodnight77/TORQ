@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, useDeferredValue } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip,
   ResponsiveContainer, CartesianGrid,
@@ -499,7 +499,7 @@ function StatusFilter({ value, onChange, t }) {
       <option value="pending">{t("dashboard.pending")}</option>
       <option value="dispatched">{t("dashboard.dispatched")}</option>
       <option value="resolved">{t("dashboard.resolved")}</option>
-      <option value="rejected">{t("dashboard.reject")}</option>
+      <option value="rejected">{t("dashboard.rejected")}</option>
     </select>
   );
 }
@@ -574,6 +574,7 @@ export default function Dashboard() {
   const [errored, setErrored] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const deferredQuery = useDeferredValue(searchQuery);
 
   const inflight = useRef(false);
   const load = useCallback(async () => {
@@ -648,8 +649,8 @@ export default function Dashboard() {
     if (statusFilter) {
       list = list.filter((w) => w.status === statusFilter);
     }
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
+    if (deferredQuery) {
+      const q = deferredQuery.toLowerCase();
       list = list.filter((w) =>
         (w.machine || "").toLowerCase().includes(q) ||
         (w.fault_code || "").toLowerCase().includes(q) ||
@@ -772,14 +773,23 @@ export default function Dashboard() {
         <h2 className={styles.sectionTitle}>{t("dashboard.all")}</h2>
         <div className={styles.toolbar}>
           <StatusFilter value={statusFilter} onChange={setStatusFilter} t={t} />
-          <input
-            className={styles.searchInput}
-            type="text"
-            placeholder={t("dashboard.search")}
-            aria-label={t("dashboard.search")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <div className={styles.searchWrap}>
+            <input
+              className={styles.searchInput}
+              type="text"
+              placeholder={t("dashboard.search")}
+              aria-label={t("dashboard.search")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className={styles.clearBtn} onClick={() => setSearchQuery("")} aria-label="Clear search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
