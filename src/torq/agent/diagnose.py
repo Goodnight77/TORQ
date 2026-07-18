@@ -11,6 +11,7 @@ calling ``ingest.search`` directly.
 
 import json
 import logging
+import time
 
 from openai import OpenAI
 
@@ -217,13 +218,36 @@ def _diagnose_oneshot(fault_code: str, machine: str, context: str) -> Diagnosis:
     return Diagnosis(fault_code=fault_code, machine=machine, **data)
 
 
+# ── diagnosis cache ──────────────────────────────────────────────────────────
+
+# Recent diagnoses keyed by (machine, fault_code, context). A repeat fault with
+# the same context within the TTL reuses the cached result and skips the whole
+# reason/act loop. Context is part of the key so a recurring fault described
+# differently (new symptom text) re-diagnoses instead of reusing a stale answer.
+# No lock: a rare race just costs a redundant diagnosis, it never corrupts state.
+# Copies go in and out so a caller mutating a Diagnosis cannot poison the cache.
+_CACHE: dict[tuple[str, str, str], tuple[float, Diagnosis]] = {}
+
+
 # ── main entry point ─────────────────────────────────────────────────────────
 
 
 def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis:
-    """Multi-step agentic diagnosis, falling back to a single-shot pass on failure."""
+    """Cached multi-step (ReAct) diagnosis, falling back to single-shot on failure."""
+    key = (machine, fault_code, context)
+    ttl = settings.diagnose_cache_ttl
+    if ttl > 0:
+        hit = _CACHE.get(key)
+        if hit and time.monotonic() < hit[0]:
+            log.info("Diagnosis cache hit for %s %s (reused, no LLM call)", machine, fault_code)
+            return hit[1].model_copy(deep=True)
+
     try:
-        return _diagnose_react(fault_code, machine, context)
+        diag = _diagnose_react(fault_code, machine, context)
     except Exception:  # noqa: BLE001 - any agent failure degrades to one-shot
         log.warning("ReAct diagnosis failed, falling back to single-shot", exc_info=True)
-        return _diagnose_oneshot(fault_code, machine, context)
+        diag = _diagnose_oneshot(fault_code, machine, context)
+
+    if ttl > 0:
+        _CACHE[key] = (time.monotonic() + ttl, diag.model_copy(deep=True))
+    return diag
