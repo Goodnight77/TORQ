@@ -131,5 +131,64 @@ class SimulatorFormatTests(unittest.TestCase):
         self.assertIn("severity", parsed)
 
 
+class LiveBufferTests(unittest.TestCase):
+    def setUp(self) -> None:
+        from torq.events import live
+
+        live.RECENT_FAULTS.clear()
+
+    def _push(self, n: int) -> None:
+        from torq.events import live
+
+        for i in range(n):
+            live.push(MachineFaultEvent(machine_id="M", fault_code=f"F{i}"))
+
+    def test_seq_monotonic_and_unique(self) -> None:
+        from torq.events import live
+
+        self._push(5)
+        seqs = [s for s, _ in live.RECENT_FAULTS]
+        self.assertEqual(seqs, sorted(seqs))
+        self.assertEqual(len(set(seqs)), len(seqs))
+
+    def test_consumer_gets_new_events_after_buffer_full(self) -> None:
+        from torq.events import live
+
+        # Fill past maxlen so old entries evict: the case the old index-based
+        # SSE cursor broke on (it returned nothing once the buffer was full).
+        self._push(60)
+        buf = list(live.RECENT_FAULTS)
+        self.assertEqual(len(buf), 50)  # bounded window
+        last_seq = buf[-1][0]  # a consumer caught up to the newest event
+        self._push(3)  # three more faults arrive
+        fresh = [e for s, e in live.RECENT_FAULTS if s > last_seq]
+        self.assertEqual(len(fresh), 3)  # old code yielded 0 here
+
+    def test_recent_events_returns_plain_dicts(self) -> None:
+        from torq.api.routes import recent_events
+
+        self._push(2)
+        out = recent_events()
+        self.assertTrue(all(isinstance(e, dict) for e in out))
+        self.assertEqual(out[0]["machine_id"], "M")
+
+
+class GatewaySourceTests(unittest.TestCase):
+    def test_every_source_row_publishes(self) -> None:
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parents[1]
+        rows = json.loads(
+            (root / "data" / "gateway_source.json").read_text(encoding="utf-8")
+        )
+        # Full-entry fingerprint keeps every row distinct, so none is dropped.
+        full = {json.dumps(r, sort_keys=True) for r in rows}
+        self.assertEqual(len(full), len(rows))
+        # machine+code alone collides (a recurring fault), which is exactly the
+        # bug the full-entry fingerprint fixes.
+        code_only = {f"{r['machine_id']}:{r['fault_code']}" for r in rows}
+        self.assertLess(len(code_only), len(rows))
+
+
 if __name__ == "__main__":
     unittest.main()
