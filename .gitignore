@@ -1,0 +1,35 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+
+# --- uv / virtualenv ---
+.venv/
+
+# --- Environment / secrets ---
+.env
+.env.local
+
+# --- Node / web ---
+node_modules/
+web/.next/
+
+# --- Editor / OS ---
+.DS_Store
+*.log
+
+# --- Data (keep placeholders) ---
+data/manuals/*
+data/history/*
+!.gitkeep
+
+# --- Qdrant local storage ---
+qdrant_storage/
+
+# --- Local-only (not committed) ---
+docs/
+CLAUDE.md

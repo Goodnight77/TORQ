@@ -1,0 +1,5 @@
+{
+  "name": "torq-web",
+  "private": true,
+  "description": "TORQ web dashboard: supervisor approval queue and downtime metrics"
+}
