@@ -47,7 +47,13 @@ function SavingsCalculator({ metrics }) {
 
   const torqDiagnosis = (metrics?.avg_time_to_diagnosis_sec || 0) / 60;
   const torqFix = metrics?.avg_time_to_fix_min || 0;
-  const torqMttr = torqDiagnosis + torqFix;
+  let torqMttr = torqDiagnosis + torqFix;
+  let isEstimate = false;
+
+  if (torqMttr === 0) {
+    torqMttr = 5;
+    isEstimate = true;
+  }
 
   const savedMinsPerFault = Math.max(0, baseline - torqMttr);
   const savedHoursPerWeek = (savedMinsPerFault * faults) / 60;
@@ -75,14 +81,28 @@ function SavingsCalculator({ metrics }) {
         <div className="calc-outputs">
           <div className="calc-res">
             <small>Hours saved / week</small>
-            <b>{savedHoursPerWeek.toFixed(1)}h</b>
+            <div className="calc-res-row">
+              <b>{savedHoursPerWeek.toFixed(1)}h</b>
+              <span className="calc-formula">
+                ({faults} faults × {savedMinsPerFault.toFixed(1)} min saved) / 60
+              </span>
+            </div>
           </div>
           <div className="calc-res">
             <small>Money saved / year</small>
-            <b className="money">${Math.round(savedMoneyPerYear).toLocaleString()}</b>
+            <div className="calc-res-row">
+              <b className="money">${Math.round(savedMoneyPerYear).toLocaleString()}</b>
+              <span className="calc-formula">
+                ({faults} faults × {savedMinsPerFault.toFixed(1)} min × ${cost} × 52 wks)
+              </span>
+            </div>
           </div>
           <div className="calc-note">
-            *based on TORQ avg MTTR of {torqMttr.toFixed(1)} mins
+            {isEstimate ? (
+              <div>*based on est. TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
+            ) : (
+              <div>*based on measured TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
+            )}
           </div>
         </div>
       </div>

@@ -83,3 +83,5 @@ footer { color: var(--mute); text-align: center; margin-top: 40px; font-size: 13
 .calc-res b { font-size: 24px; color: var(--text); }
 .calc-res b.money { color: var(--green); }
 .calc-note { font-size: 11px; color: var(--mute); font-style: italic; margin-top: auto; }
+.calc-res-row { display: flex; align-items: baseline; gap: 10px; }
+.calc-formula { font-size: 11px; color: var(--mute); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: rgba(255,255,255,0.03); padding: 3px 6px; border-radius: 4px; border: 1px solid var(--line); }
