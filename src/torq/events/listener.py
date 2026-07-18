@@ -1,6 +1,7 @@
 """MQTT fault listener: subscribe to fault codes and trigger the pipeline."""
 
 import json
+from datetime import datetime, timezone
 
 import paho.mqtt.client as mqtt
 
@@ -19,8 +20,10 @@ def handle_payload(payload: bytes) -> WorkOrder | None:
     if "fault_code" not in fault:
         print("[MQTT] ignored payload without fault_code")
         return None
+    arrival = datetime.now(timezone.utc).isoformat()
     wo = handle_fault(
-        fault["fault_code"], fault.get("machine", ""), fault.get("context", "")
+        fault["fault_code"], fault.get("machine", ""), fault.get("context", ""),
+        fault_arrived_at=arrival,
     )
     print(f"[MQTT] {fault['fault_code']} -> work order {wo.id} queued for approval")
     return wo

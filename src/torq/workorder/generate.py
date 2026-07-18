@@ -61,7 +61,9 @@ def _translate(en_text: str) -> dict[str, str]:
     return json.loads(raw[start : end + 1]) if start != -1 else {}
 
 
-def build_work_order(diag: Diagnosis, translate: bool = True) -> WorkOrder:
+def build_work_order(
+    diag: Diagnosis, translate: bool = True, fault_arrived_at: str | None = None
+) -> WorkOrder:
     en = _render_en(diag)
     content = {"en": en}
     if translate:
@@ -79,4 +81,5 @@ def build_work_order(diag: Diagnosis, translate: bool = True) -> WorkOrder:
         sources=diag.sources,
         content=content,
         confidence=diag.confidence,
+        fault_arrived_at=fault_arrived_at,
     )

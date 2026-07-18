@@ -146,7 +146,7 @@ def metrics() -> dict:
     for w in wos:
         by_status[w.status] = by_status.get(w.status, 0) + 1
 
-    ttd = [s for w in wos if (s := _secs(w.created_at, w.dispatched_at)) is not None]
+    ttd = [s for w in wos if (s := _secs(w.fault_arrived_at, w.dispatched_at)) is not None]
     resolved = [w for w in wos if w.status == "resolved"]
     ttf = [
         float(w.outcome["time_to_fix_min"])

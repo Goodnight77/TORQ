@@ -1,6 +1,7 @@
 """HTTP endpoints: faults, work orders, approvals, outcomes, dashboard metrics."""
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -65,7 +66,11 @@ def create_machine(machine: MachineIn):
 @router.post("/faults")
 def report_fault(f: FaultIn):
     """A machine fault arrives -> diagnose -> queue a work order for approval."""
-    return handle_fault(f.fault_code, f.machine, f.context, translate=f.translate)
+    arrival = datetime.now(timezone.utc).isoformat()
+    return handle_fault(
+        f.fault_code, f.machine, f.context,
+        translate=f.translate, fault_arrived_at=arrival,
+    )
 
 
 @router.get("/work-orders")

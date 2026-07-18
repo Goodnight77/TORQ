@@ -1,6 +1,7 @@
 """End-to-end pipeline tests (with mocked external dependencies)."""
 
 import unittest
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 from torq.agent.schemas import Diagnosis, WorkOrder
@@ -97,6 +98,34 @@ class HandleFaultTests(unittest.TestCase):
 
         result = handle_fault("E-471")
         self.assertEqual(result.status, "pending")
+
+    def test_handle_fault_passes_fault_arrived_at(self) -> None:
+        wo = self._mock_work_order()
+        self.mock_build.return_value = wo
+        self.mock_submit.return_value = wo
+
+        stamp = "2026-07-18T12:00:00+00:00"
+        handle_fault("E-471", fault_arrived_at=stamp)
+        _call = self.mock_build.call_args
+        assert _call is not None
+        _kwargs = _call[1] if _call[1] else {}
+        self.assertEqual(_kwargs.get("fault_arrived_at"), stamp)
+
+    def test_handle_fault_defaults_arrival_to_now(self) -> None:
+        wo = self._mock_work_order()
+        self.mock_build.return_value = wo
+        self.mock_submit.return_value = wo
+
+        before = datetime.now(timezone.utc).isoformat()
+        handle_fault("E-471")
+        after = datetime.now(timezone.utc).isoformat()
+        _call = self.mock_build.call_args
+        assert _call is not None
+        _kwargs = _call[1] if _call[1] else {}
+        arrived = _kwargs.get("fault_arrived_at")
+        self.assertIsInstance(arrived, str)
+        self.assertGreaterEqual(arrived, before)
+        self.assertLessEqual(arrived, after)
 
 
 if __name__ == "__main__":
