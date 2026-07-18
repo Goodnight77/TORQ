@@ -76,6 +76,7 @@ def build_work_order(diag: Diagnosis, translate: bool = True) -> WorkOrder:
         tools=diag.tools,
         safety_warnings=diag.safety_warnings,
         required_skill=_required_skill(diag.fault_code),
+        sources=diag.sources,
         content=content,
         confidence=diag.confidence,
     )

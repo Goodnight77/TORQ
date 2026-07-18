@@ -51,6 +51,9 @@ button.sim { background: #1f6feb; color: #fff; margin: 4px 0 8px; }
 .panel { width: min(560px, 92vw); height: 100%; background: var(--card); border-left: 1px solid var(--line); padding: 24px; overflow-y: auto; }
 .panel h3 { margin: 8px 0; }
 .close { background: #23303a; color: var(--text); float: right; }
+.sources { margin: 14px 0; }
+.sources ul { margin: 4px 0 0; padding-left: 18px; }
+.sources li { color: var(--mute); font-size: 13px; margin: 2px 0; }
 .lang { margin: 14px 0; }
 .langlabel { color: var(--green); font-weight: 700; font-size: 12px; margin-bottom: 4px; }
 .panel pre { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font: 13px/1.5 system-ui, sans-serif; margin: 0; }
