@@ -245,7 +245,11 @@
 }
 
 .calcRes b.money {
-  color: var(--text-primary);
+  color: #1a8a3a;
+}
+
+.calcRes b.hours {
+  color: #1a73e8;
 }
 
 .calcResRow {
@@ -437,8 +441,8 @@
 }
 
 .approveBtn {
-  background: var(--text-primary);
-  color: var(--bg-primary);
+  background: #1a8a3a;
+  color: #fff;
   border: none;
   border-radius: 6px;
   padding: 7px 16px;
@@ -447,11 +451,11 @@
   font-weight: 700;
   font-size: 12px;
   letter-spacing: 0.01em;
-  transition: opacity 0.2s, background 0.35s, color 0.35s;
+  transition: opacity 0.2s;
 }
 
 .approveBtn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
@@ -461,26 +465,24 @@
 
 .rejectBtn {
   background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--border-color);
+  color: #dc3545;
+  border: 1px solid #dc3545;
   border-radius: 6px;
   padding: 7px 16px;
   cursor: pointer;
   font-family: "ALTGumbo", system-ui, sans-serif;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 12px;
   margin-left: 8px;
-  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  transition: opacity 0.2s, background 0.2s;
 }
 
 .rejectBtn:hover:not(:disabled) {
-  color: #dc3545;
-  border-color: #dc3545;
-  background: rgba(248, 81, 73, 0.04);
+  background: rgba(248, 81, 73, 0.08);
 }
 
 .rejectBtn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
@@ -715,6 +717,17 @@
   color: var(--text-muted);
   white-space: nowrap;
   opacity: 0.6;
+  transition: color 0.35s;
+}
+
+.feedEmpty {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  padding: 8px 0;
+  text-align: center;
   transition: color 0.35s;
 }
 

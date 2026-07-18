@@ -50,7 +50,14 @@ function Skeleton({ width, height, style }) {
 }
 
 function LiveFeed({ faults, t }) {
-  if (!faults || faults.length === 0) return null;
+  if (!faults || faults.length === 0) {
+    return (
+      <div className={styles.feedCard}>
+        <div className={styles.feedHead}>{t("dashboard.live_feed")}</div>
+        <div className={styles.feedEmpty}>No recent faults detected</div>
+      </div>
+    );
+  }
   const displayed = faults.slice(0, 8);
   return (
     <div className={styles.feedCard}>
@@ -111,15 +118,12 @@ function SavingsCalculator({ metrics, t }) {
   const [cost, setCost] = useState(50);
   const [baseline, setBaseline] = useState(60);
 
+  const hasRealMetrics = metrics &&
+    (Number(metrics?.avg_time_to_diagnosis_sec) > 0 || Number(metrics?.avg_time_to_fix_min) > 0);
+
   const torqDiagnosis = (metrics?.avg_time_to_diagnosis_sec || 0) / 60;
   const torqFix = metrics?.avg_time_to_fix_min || 0;
-  let torqMttr = torqDiagnosis + torqFix;
-  let isEstimate = false;
-
-  if (torqMttr === 0) {
-    torqMttr = 5;
-    isEstimate = true;
-  }
+  const torqMttr = torqDiagnosis + torqFix;
 
   const savedMinsPerFault = Math.max(0, baseline - torqMttr);
   const savedHoursPerWeek = (savedMinsPerFault * faults) / 60;
@@ -148,7 +152,7 @@ function SavingsCalculator({ metrics, t }) {
           <div className={styles.calcRes}>
             <small>{t("dashboard.hours_saved")}</small>
             <div className={styles.calcResRow}>
-              <b>{savedHoursPerWeek.toFixed(1)}h</b>
+              <b className={styles.hours}>{savedHoursPerWeek.toFixed(1)}h</b>
               <span className={styles.calcFormula}>
                 ({faults} faults &times; {savedMinsPerFault.toFixed(1)} min) &divide; 60
               </span>
@@ -164,10 +168,10 @@ function SavingsCalculator({ metrics, t }) {
             </div>
           </div>
           <div className={styles.calcNote}>
-            {isEstimate ? (
-              <div>*based on est. TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
-            ) : (
+            {hasRealMetrics ? (
               <div>*based on measured TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
+            ) : (
+              <div>*configure your assumptions above to preview savings</div>
             )}
           </div>
         </div>
@@ -423,9 +427,9 @@ export default function Dashboard() {
     return list;
   }, [all, statusFilter, searchQuery]);
 
-  const pct = (x) => (x == null ? "-" : Math.round(x * 100) + "%");
-  const secs = (x) => (x == null ? "-" : x + "s");
-  const mins = (x) => (x == null ? "-" : x + " min");
+  const pct = (x) => (x == null || x === 0 ? "—" : Math.round(x * 100) + "%");
+  const secs = (x) => (x == null || x === 0 ? "—" : x + "s");
+  const mins = (x) => (x == null || x === 0 ? "—" : x + " min");
 
   return (
     <div className={styles.page}>
