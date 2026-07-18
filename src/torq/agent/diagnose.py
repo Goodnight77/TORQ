@@ -252,7 +252,18 @@ def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis
         diag = _diagnose_react(fault_code, machine, context)
     except Exception:  # noqa: BLE001 - any agent failure degrades to one-shot
         log.warning("ReAct diagnosis failed, falling back to single-shot", exc_info=True)
-        diag = _diagnose_oneshot(fault_code, machine, context)
+        try:
+            diag = _diagnose_oneshot(fault_code, machine, context)
+        except Exception:  # noqa: BLE001 - LLM/retrieval down: degrade, never 500 the demo
+            log.error("Diagnosis unavailable (LLM/retrieval down), returning stub", exc_info=True)
+            diag = Diagnosis(
+                fault_code=fault_code,
+                machine=machine,
+                root_cause="Automated diagnosis unavailable - needs manual review",
+                confidence=0.0,
+                repair_steps=["Escalate to a technician for manual diagnosis."],
+                investigation=["Diagnosis service unreachable; work order created for manual handling."],
+            )
 
     if ttl > 0:
         _CACHE[key] = (time.monotonic() + ttl, diag.model_copy(deep=True))

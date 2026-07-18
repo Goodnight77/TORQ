@@ -59,3 +59,33 @@ def approve(wo_id: str) -> tuple[WorkOrder, dict] | None:
         detail=f"{delivery.get('channel', '?')} to {tech.get('name', '?')}", wo_id=wo.id,
     )
     return wo, delivery
+
+
+def notify_technician(wo_id: str) -> tuple[WorkOrder, dict] | None:
+    """Manually (re)send a work order's WhatsApp to its matched technician.
+
+    On-demand send for the supervisor/demo: works on any work order regardless
+    of status, so a message can be pushed (or re-pushed) at will.
+    """
+    wo = models.get(wo_id)
+    if not wo:
+        return None
+    tech = routing.choose_technician(wo)
+    if not tech:
+        live.push_activity(
+            "dispatch_failed", wo.machine, wo.fault_code,
+            detail="no technician on shift", wo_id=wo.id,
+        )
+        return wo, {"channel": "none", "error": "no technician available"}
+
+    delivery = notify.dispatch(wo, tech)
+    wo.assigned_to = tech.get("name")
+    if wo.status in ("pending", "approved"):
+        wo.status = "dispatched"
+        wo.dispatched_at = _now()
+    models.save(wo)
+    live.push_activity(
+        "dispatched", wo.machine, wo.fault_code,
+        detail=f"{delivery.get('channel', '?')} to {tech.get('name', '?')}", wo_id=wo.id,
+    )
+    return wo, delivery

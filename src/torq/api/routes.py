@@ -115,6 +115,16 @@ def reject(wo_id: str):
     return wo
 
 
+@router.post("/work-orders/{wo_id}/notify")
+def notify_work_order(wo_id: str):
+    """Manually (re)send the work order to its matched technician via WhatsApp."""
+    res = approval.notify_technician(wo_id)
+    if not res:
+        raise HTTPException(404, "work order not found")
+    wo, delivery = res
+    return {"work_order": wo, "delivery": delivery}
+
+
 @router.post("/work-orders/{wo_id}/outcome")
 def outcome(wo_id: str, o: OutcomeIn):
     wo = feedback.record_outcome(
