@@ -1,9 +1,33 @@
-"""Repair-history ingestion.
+"""Repair-history ingestion: load past repairs, index in Qdrant for reuse."""
 
-Loads past repair-history logs and outcomes into a searchable store so the
-diagnosis agent can learn from previously resolved faults.
-"""
+import json
+from pathlib import Path
 
-# TODO: load repair-history records from Postgres / log exports
-# TODO: normalize records (fault code, machine, fix applied, outcome)
-# TODO: embed and index history entries for similarity search
+from torq.config import settings
+from torq.ingest import index_docs
+
+
+def _record_to_text(r: dict) -> str:
+    """Flatten a repair record into a searchable document."""
+    return (
+        f"Machine {r.get('machine')} fault {r.get('fault_code')}: "
+        f"symptom: {r.get('symptom')} "
+        f"root cause: {r.get('root_cause')} "
+        f"fix: {r.get('fix')} "
+        f"notes: {r.get('technician_notes')}"
+    )
+
+
+def ingest_history(history_file: Path | None = None) -> int:
+    """Index every repair record. Returns record count."""
+    history_file = history_file or settings.history_file
+    if not history_file.exists():
+        return 0
+    records = json.loads(history_file.read_text(encoding="utf-8"))
+    docs = [_record_to_text(r) for r in records]
+    payloads = [dict(r) for r in records]
+    return index_docs(settings.history_collection, docs, payloads)
+
+
+if __name__ == "__main__":
+    print(f"Indexed {ingest_history()} repair records.")
