@@ -26,7 +26,7 @@ export default function Navbar() {
           </svg>
         </Link>
         <div className={styles.right}>
-          <Link to="/dashboard" className={styles.link}>Dashboard</Link>
+          <Link to="/dashboard" className={styles.link}>{t("navbar.dashboard")}</Link>
           <div className={styles.langGroup}>
             {LANGS.map((l) => (
               <button

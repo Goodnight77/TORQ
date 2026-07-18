@@ -1,39 +1,41 @@
 import { Link } from "react-router-dom";
 import styles from "./Footer.module.css";
 import FAQ from "./FAQ.jsx";
+import { useI18n } from "../i18n";
 
 export default function Footer() {
+  const { t } = useI18n();
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <div className={styles.grid}>
           <div className={styles.col}>
-            <h4 className={styles.heading}>Product</h4>
-            <Link to="/" className={styles.link}>Features</Link>
-            <Link to="/" className={styles.link}>Pipeline</Link>
-            <Link to="/" className={styles.link}>How it works</Link>
-            <Link to="/dashboard" className={styles.link}>Dashboard</Link>
+            <h4 className={styles.heading}>{t("footer.product")}</h4>
+            <Link to="/" className={styles.link}>{t("footer.features")}</Link>
+            <Link to="/" className={styles.link}>{t("footer.pipeline")}</Link>
+            <Link to="/" className={styles.link}>{t("footer.how_it_works")}</Link>
+            <Link to="/dashboard" className={styles.link}>{t("footer.dashboard")}</Link>
           </div>
           <div className={styles.col}>
-            <h4 className={styles.heading}>Use Cases</h4>
-            <span className={styles.link}>Manufacturing</span>
-            <span className={styles.link}>Warehousing</span>
-            <span className={styles.link}>Energy</span>
+            <h4 className={styles.heading}>{t("footer.use_cases")}</h4>
+            <span className={styles.link}>{t("footer.manufacturing")}</span>
+            <span className={styles.link}>{t("footer.warehousing")}</span>
+            <span className={styles.link}>{t("footer.energy")}</span>
           </div>
           <div className={styles.col}>
-            <h4 className={styles.heading}>Support</h4>
-            <span className={styles.link}>Documentation</span>
-            <span className={styles.link}>API Reference</span>
-            <span className={styles.link}>Contact sales</span>
-            <span className={styles.link}>Status</span>
+            <h4 className={styles.heading}>{t("footer.support")}</h4>
+            <span className={styles.link}>{t("footer.documentation")}</span>
+            <span className={styles.link}>{t("footer.api_reference")}</span>
+            <span className={styles.link}>{t("footer.contact_sales")}</span>
+            <span className={styles.link}>{t("footer.status")}</span>
           </div>
           <div className={styles.col}>
-            <h4 className={styles.heading}>FAQ</h4>
+            <h4 className={styles.heading}>{t("footer.faq")}</h4>
             <FAQ dark={true} />
           </div>
         </div>
         <div className={styles.bottom}>
-          TORQ &middot; From fault code to fixed. Built for the factory floor.
+          {t("footer.tagline")}
         </div>
       </div>
     </footer>
