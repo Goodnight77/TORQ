@@ -86,6 +86,13 @@ class Settings(BaseSettings):
     # faults. 0 disables. Seconds.
     diagnose_cache_ttl: int = 600
 
+    # LLM timeouts (seconds)
+    llm_timeout: int = 60
+    translate_timeout: int = 30
+
+    # Fallbacks for external services (degrades MQTT/WhatsApp to in-app equivalents for demo safety)
+    enable_fallbacks: bool = True
+
     # Retrieval
     top_k: int = 4
     use_hybrid: bool = True  # dense + BM25 sparse fused with RRF

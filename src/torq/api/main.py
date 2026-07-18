@@ -19,21 +19,27 @@ from torq.events import listener
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     models.init_db()
-    mqtt_client = listener.build_client()
-    try:
-        mqtt_client.connect(
-            settings.mqtt_broker_url,
-            settings.mqtt_port,
-            keepalive=60,
-        )
-        mqtt_client.loop_start()
-        print("[MQTT] background listener started")
-    except Exception as exc:
-        print(f"[MQTT] broker unreachable ({exc}), continuing without live feed")
+    mqtt_client = None
+    if settings.enable_fallbacks:
+        print("[MQTT] fallbacks enabled, skipping broker connection")
+    else:
+        mqtt_client = listener.build_client()
+        try:
+            mqtt_client.connect(
+                settings.mqtt_broker_url,
+                settings.mqtt_port,
+                keepalive=60,
+            )
+            mqtt_client.loop_start()
+            print("[MQTT] background listener started")
+        except Exception as exc:
+            print(f"[MQTT] broker unreachable ({exc}), continuing without live feed")
+            mqtt_client = None
     yield
-    mqtt_client.loop_stop()
-    mqtt_client.disconnect()
-    print("[MQTT] listener stopped")
+    if mqtt_client:
+        mqtt_client.loop_stop()
+        mqtt_client.disconnect()
+        print("[MQTT] listener stopped")
 
 
 app = FastAPI(title="TORQ - Fault-to-Fix Engine", lifespan=lifespan)

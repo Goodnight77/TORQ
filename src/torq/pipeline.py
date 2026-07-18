@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 
 from torq.agent.diagnose import diagnose
 from torq.agent.schemas import WorkOrder
-from torq.db import models
 from torq.dispatch import approval
 from torq.events import live
 from torq.workorder.generate import build_work_order

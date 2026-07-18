@@ -6,6 +6,7 @@ lifespan). Falls back gracefully if the broker is unreachable.
 
 import json
 from datetime import datetime, timezone
+from typing import Any
 
 import paho.mqtt.client as mqtt
 
@@ -47,23 +48,38 @@ def handle_payload(payload: bytes) -> WorkOrder | None:
     return wo
 
 
-def _on_connect(client, userdata, flags, reason_code, properties=None) -> None:
+def _on_connect(
+    client: mqtt.Client,
+    userdata: Any,
+    flags: dict[str, Any],
+    reason_code: mqtt.ReasonCode | int,
+    properties: Any = None,
+) -> None:
     if reason_code == 0:
         # QoS 0 is at-most-once, so a fault can be dropped silently. Bump to
         # qos=1 (here and on the publisher) if lost faults matter.
         client.subscribe(settings.mqtt_topic, qos=0)
         print(f"[MQTT] subscribed to {settings.mqtt_topic}")
+        # Publish "online" status to indicate listener is running
+        status_topic = f"{settings.mqtt_topic}/status"
+        client.publish(status_topic, payload="online", qos=1, retain=True)
     else:
         print(f"[MQTT] connect failed (reason={reason_code}), will retry…")
 
 
-def _on_disconnect(client, userdata, disconnect_flags, reason, properties) -> None:
+def _on_disconnect(
+    client: mqtt.Client,
+    userdata: Any,
+    disconnect_flags: Any,
+    reason: mqtt.ReasonCode | int,
+    properties: Any,
+) -> None:
     rc = reason.value if hasattr(reason, "value") else reason
     if rc != 0:
         print(f"[MQTT] disconnected (reason={rc}), auto-reconnecting…")
 
 
-def _on_message(client, userdata, msg) -> None:
+def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> None:
     # Runs the full diagnosis pipeline synchronously in paho's network thread.
     # Fine at demo fault rates; if messages pile up or keepalive stalls, hand
     # payloads to a worker queue and return here immediately.
@@ -77,6 +93,12 @@ def build_client() -> mqtt.Client:
     client.on_disconnect = _on_disconnect
     client.on_message = _on_message
     client.reconnect_delay_set(min_delay=4, max_delay=300)
+
+    # Configure Last Will and Testament (LWT) for unexpected disconnects.
+    # The broker will publish "offline" to the status topic if this client drops.
+    status_topic = f"{settings.mqtt_topic}/status"
+    client.will_set(status_topic, payload="offline", qos=1, retain=True)
+
     return client
 
 

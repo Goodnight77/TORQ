@@ -3,10 +3,12 @@
 import asyncio
 import json
 from datetime import datetime, timezone
+from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
+from torq.agent.schemas import WorkOrder
 from torq.config import settings
 from torq.db import models
 from torq.dispatch import approval
@@ -39,12 +41,12 @@ class OutcomeIn(BaseModel):
 
 
 @router.get("/machines")
-def machines():
+def machines() -> list[dict[str, Any]]:
     return models.list_machines()
 
 
 @router.get("/machines/{machine_id}")
-def machine(machine_id: str):
+def machine(machine_id: str) -> dict[str, Any]:
     registered = models.get_machine(machine_id)
     if not registered:
         raise HTTPException(404, "machine not found")
@@ -52,7 +54,7 @@ def machine(machine_id: str):
 
 
 @router.post("/machines", status_code=201)
-def create_machine(machine: MachineIn):
+def create_machine(machine: MachineIn) -> dict[str, Any]:
     machine_id = machine.id.strip()
     model = machine.model.strip()
     location = machine.location.strip()
@@ -64,7 +66,7 @@ def create_machine(machine: MachineIn):
 
 
 @router.post("/faults", status_code=201)
-def report_fault(f: FaultIn):
+def report_fault(f: FaultIn) -> WorkOrder:
     """A machine fault arrives -> diagnose -> queue a work order for approval."""
     arrival = datetime.now(timezone.utc).isoformat()
     return handle_fault(
@@ -74,12 +76,12 @@ def report_fault(f: FaultIn):
 
 
 @router.get("/work-orders")
-def work_orders(status: str | None = None):
+def work_orders(status: str | None = None) -> list[WorkOrder]:
     return models.list_by_status(status) if status else models.list_all()
 
 
 @router.get("/work-orders/{wo_id}")
-def work_order(wo_id: str):
+def work_order(wo_id: str) -> WorkOrder:
     wo = models.get(wo_id)
     if not wo:
         raise HTTPException(404, "work order not found")
@@ -87,7 +89,7 @@ def work_order(wo_id: str):
 
 
 @router.get("/work-orders/{wo_id}/pdf")
-def work_order_pdf(wo_id: str):
+def work_order_pdf(wo_id: str) -> FileResponse:
     """Download the work-order PDF. Served from a disk cache; rendered once on miss."""
     path = settings.workorder_dir / f"work_order_{wo_id}.pdf"
     if not path.exists():  # cache miss: fetch once, render, no DB write
@@ -99,7 +101,7 @@ def work_order_pdf(wo_id: str):
 
 
 @router.post("/work-orders/{wo_id}/approve")
-def approve(wo_id: str):
+def approve(wo_id: str) -> dict[str, Any]:
     res = approval.approve(wo_id)
     if not res:
         raise HTTPException(404, "work order not found")
@@ -108,7 +110,7 @@ def approve(wo_id: str):
 
 
 @router.post("/work-orders/{wo_id}/reject")
-def reject(wo_id: str):
+def reject(wo_id: str) -> WorkOrder:
     wo = approval.reject(wo_id)
     if not wo:
         raise HTTPException(404, "work order not found")
@@ -116,7 +118,7 @@ def reject(wo_id: str):
 
 
 @router.post("/work-orders/{wo_id}/notify")
-def notify_work_order(wo_id: str):
+def notify_work_order(wo_id: str) -> dict[str, Any]:
     """Manually (re)send the work order to its matched technician via WhatsApp."""
     res = approval.notify_technician(wo_id)
     if not res:
@@ -126,7 +128,7 @@ def notify_work_order(wo_id: str):
 
 
 @router.post("/work-orders/{wo_id}/outcome")
-def outcome(wo_id: str, o: OutcomeIn):
+def outcome(wo_id: str, o: OutcomeIn) -> WorkOrder:
     wo = feedback.record_outcome(
         wo_id, o.resolved, o.actual_fix, o.notes, o.time_to_fix_min
     )
@@ -136,24 +138,24 @@ def outcome(wo_id: str, o: OutcomeIn):
 
 
 @router.get("/metrics")
-def metrics():
+def metrics() -> dict[str, Any]:
     return models.metrics()
 
 
 @router.get("/metrics/trend")
-def metrics_trend():
+def metrics_trend() -> list[dict[str, Any]]:
     """Per-day diagnosis latency + MTTR for the trend chart."""
     return models.trend()
 
 
 @router.get("/metrics/faults-per-machine")
-def metrics_faults_per_machine():
+def metrics_faults_per_machine() -> list[dict[str, Any]]:
     """Work-order count per machine for the bar chart."""
     return models.faults_per_machine()
 
 
 @router.get("/events/stream")
-async def event_stream(request: Request):
+async def event_stream(request: Request) -> StreamingResponse:
     """SSE endpoint: streams incoming MachineFaultEvent in real-time."""
 
     async def generate():
@@ -171,13 +173,13 @@ async def event_stream(request: Request):
 
 
 @router.get("/events/recent")
-def recent_events():
+def recent_events() -> list[dict[str, Any]]:
     """Return the last 50 MachineFaultEvent dicts."""
     return [event for _seq, event in live.RECENT_FAULTS]
 
 
 @router.get("/events/activity/stream")
-async def activity_stream(request: Request):
+async def activity_stream(request: Request) -> StreamingResponse:
     """SSE endpoint: streams pipeline activity (received -> diagnosed -> dispatched)."""
 
     async def generate():
@@ -195,13 +197,13 @@ async def activity_stream(request: Request):
 
 
 @router.get("/events/activity/recent")
-def recent_activity():
+def recent_activity() -> list[dict[str, Any]]:
     """Return the recent pipeline activity entries (oldest first)."""
     return [event for _seq, event in live.RECENT_ACTIVITY]
 
 
 @router.get("/eval")
-def eval_results():
+def eval_results() -> dict[str, Any]:
     """Precomputed retrieval-eval results (dense vs hybrid vs hybrid+rerank)."""
     p = settings.eval_results_file
     if not p.exists():

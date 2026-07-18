@@ -22,18 +22,16 @@ MOCK_DIAGNOSIS = Diagnosis(
 
 class HandleFaultTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.init_db_patch = patch("torq.pipeline.models.init_db")
         self.diagnose_patch = patch("torq.pipeline.diagnose", return_value=MOCK_DIAGNOSIS)
         self.build_patch = patch("torq.pipeline.build_work_order")
         self.submit_patch = patch("torq.pipeline.approval.submit")
 
-        self.mock_init_db = self.init_db_patch.start()
         self.mock_diagnose = self.diagnose_patch.start()
         self.mock_build = self.build_patch.start()
         self.mock_submit = self.submit_patch.start()
 
     def tearDown(self) -> None:
-        for p in (self.init_db_patch, self.diagnose_patch, self.build_patch, self.submit_patch):
+        for p in (self.diagnose_patch, self.build_patch, self.submit_patch):
             p.stop()
 
     def _mock_work_order(self, **overrides: object) -> WorkOrder:
@@ -54,7 +52,6 @@ class HandleFaultTests(unittest.TestCase):
 
         result = handle_fault("E-471", "CM-350 Line 2", "Motor tripped.")
 
-        self.mock_init_db.assert_called_once()
         self.mock_diagnose.assert_called_once_with("E-471", "CM-350 Line 2", "Motor tripped.")
         self.mock_build.assert_called_once()
         self.mock_submit.assert_called_once_with(wo)

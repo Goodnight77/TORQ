@@ -24,8 +24,7 @@ def test_push_activity_records_shape():
 @patch("torq.pipeline.approval.submit", side_effect=lambda wo: wo)
 @patch("torq.pipeline.build_work_order")
 @patch("torq.pipeline.diagnose")
-@patch("torq.pipeline.models.init_db")
-def test_handle_fault_emits_stages(_init, mock_diag, mock_build, _submit):
+def test_handle_fault_emits_stages(mock_diag, mock_build, _submit):
     from torq.pipeline import handle_fault
 
     live.RECENT_ACTIVITY.clear()

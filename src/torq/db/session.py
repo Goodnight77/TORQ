@@ -83,7 +83,32 @@ class _PostgresConnection:
         return self._connection.execute(query, parameters)
 
 
-def get_conn() -> sqlite3.Connection | _PostgresConnection:
+class _SQLiteConnection:
+    """Context manager wrapping a SQLite connection to ensure proper transaction commit/rollback
+    and cleanup (closing the connection) on block exit. This prevents database locks on Windows.
+    """
+
+    def __init__(self, connection: sqlite3.Connection) -> None:
+        self._connection = connection
+
+    def __enter__(self) -> sqlite3.Connection:
+        self._connection.__enter__()
+        return self._connection
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> bool | None:
+        try:
+            self._connection.__exit__(exc_type, exc_value, traceback)
+        finally:
+            self._connection.close()
+        return None
+
+
+def get_conn() -> _SQLiteConnection | _PostgresConnection:
     """Return a pooled Postgres connection when DATABASE_URL is set, else SQLite."""
     if settings.database_url:
         return _PostgresConnection(_get_pool().connection())
@@ -92,4 +117,4 @@ def get_conn() -> sqlite3.Connection | _PostgresConnection:
     sqlite_connection.row_factory = sqlite3.Row
     sqlite_connection.execute("PRAGMA journal_mode=WAL")
     sqlite_connection.execute("PRAGMA busy_timeout=5000")
-    return sqlite_connection
+    return _SQLiteConnection(sqlite_connection)

@@ -25,6 +25,11 @@ def init_db() -> None:
         )
         conn.execute(
             """
+            CREATE INDEX IF NOT EXISTS idx_work_orders_status ON work_orders (status)
+            """
+        )
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS machines (
                 id TEXT PRIMARY KEY,
                 model TEXT NOT NULL,
@@ -52,11 +57,11 @@ def _demo_machines() -> list[dict[str, str]]:
         machine_id = str(scenario.get("machine", "")).strip()
         if not machine_id or machine_id in machines:
             continue
-        model, separator, line = machine_id.rpartition(" Line ")
+        model, _, line = machine_id.rpartition(" Line ")
         machines[machine_id] = {
             "id": machine_id,
-            "model": model if separator else machine_id,
-            "location": f"Line {line}" if separator else "",
+            "model": model if _ else machine_id,
+            "location": f"Line {line}" if _ else "",
         }
     return list(machines.values())
 
@@ -151,11 +156,9 @@ def metrics() -> dict:
     ttd = [s for w in wos if (s := _secs(w.fault_arrived_at, w.created_at)) is not None]
     resolved = [w for w in wos if w.status == "resolved"]
     ttf = [
-        float(w.outcome["time_to_fix_min"])
+        t
         for w in resolved
-        if w.outcome
-        and isinstance(w.outcome.get("time_to_fix_min"), (int, float))
-        and not isinstance(w.outcome.get("time_to_fix_min"), bool)
+        if (t := _downtime_min(w)) is not None
     ]
 
     machine_rows = {machine["id"]: machine for machine in list_machines()}

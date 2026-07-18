@@ -40,7 +40,7 @@ def dispatch(wo: WorkOrder, tech: dict) -> dict:
     body = _message_for(wo, tech)
     to = tech.get("phone", "")
 
-    twilio_ready = to and all(
+    twilio_ready = to and not settings.enable_fallbacks and all(
         [settings.twilio_account_sid, settings.twilio_auth_token, settings.twilio_whatsapp_from]
     )
     if twilio_ready:

@@ -53,7 +53,7 @@ def _translate(en_text: str) -> dict[str, str]:
             {"role": "user", "content": en_text},
         ],
         stream=False,
-        timeout=30,
+        timeout=settings.translate_timeout,
     )
     raw = resp.choices[0].message.content.strip()
     if raw.startswith("```"):

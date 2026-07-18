@@ -134,11 +134,16 @@ def _chat(client: OpenAI, messages: list[dict], json_mode: bool = True):
                 messages=messages,
                 response_format={"type": "json_object"},
                 stream=False,
-                timeout=60,
+                timeout=settings.llm_timeout,
             )
         except Exception:  # noqa: BLE001 - model may not support json mode; plain call
             pass
-    return client.chat.completions.create(model=settings.llm_model, messages=messages, stream=False, timeout=60)
+    return client.chat.completions.create(
+        model=settings.llm_model,
+        messages=messages,
+        stream=False,
+        timeout=settings.llm_timeout,
+    )
 
 
 def _merge_sources(data: dict, extra: list[str]) -> None:
@@ -231,7 +236,9 @@ def _diagnose_oneshot(fault_code: str, machine: str, context: str) -> Diagnosis:
 # the same context within the TTL reuses the cached result and skips the whole
 # reason/act loop. Context is part of the key so a recurring fault described
 # differently (new symptom text) re-diagnoses instead of reusing a stale answer.
-# No lock: a rare race just costs a redundant diagnosis, it never corrupts state.
+# No lock: dict read/write operations (get and set) are atomic and thread-safe
+# under the CPython GIL. A rare race just costs a redundant diagnosis, it never
+# corrupts the cache state.
 # Copies go in and out so a caller mutating a Diagnosis cannot poison the cache.
 _CACHE: dict[tuple[str, str, str], tuple[float, Diagnosis]] = {}
 
