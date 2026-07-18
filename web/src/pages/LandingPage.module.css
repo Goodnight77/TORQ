@@ -216,7 +216,7 @@
   max-width: 1000px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0;
   background: var(--surface);
   border: 1px solid var(--border-color);
@@ -257,6 +257,7 @@
 .statVisible:nth-child(2) { transition-delay: 100ms; }
 .statVisible:nth-child(3) { transition-delay: 200ms; }
 .statVisible:nth-child(4) { transition-delay: 300ms; }
+.statVisible:nth-child(5) { transition-delay: 400ms; }
 
 .statValue {
   font-family: "ALTGumbo", system-ui, sans-serif;
@@ -449,4 +450,88 @@
 .fadeUpVisible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ── Problems section ── */
+
+.problemsSection {
+  padding: 120px 24px;
+  position: relative;
+}
+
+.problemsInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 80px;
+  align-items: flex-start;
+}
+
+.problemsLeft {
+  flex: 1;
+  position: sticky;
+  top: 140px;
+  max-width: 480px;
+}
+
+.problemsHeadline {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.015em;
+  transition: color 0.35s;
+}
+
+.problemsRight {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.problemCard {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.35s, border-color 0.35s;
+}
+
+.problemCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.problemCard h3 {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 16px;
+  transition: color 0.35s;
+}
+
+.problemCard p {
+  color: var(--text-muted);
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+  transition: color 0.35s;
+}
+
+@media (max-width: 900px) {
+  .problemsInner {
+    flex-direction: column;
+    gap: 48px;
+  }
+  .problemsLeft {
+    position: relative;
+    top: 0;
+    max-width: 100%;
+  }
 }
