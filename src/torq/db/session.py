@@ -67,7 +67,9 @@ def get_conn() -> sqlite3.Connection | _PostgresConnection:
     if settings.database_url:
         postgres_connection = cast(
             psycopg.Connection[dict[str, Any]],
-            psycopg.connect(settings.database_url, row_factory=cast(Any, dict_row)),
+            psycopg.connect(
+                settings.database_url, row_factory=cast(Any, dict_row), prepare_threshold=None
+            ),
         )
         return _PostgresConnection(postgres_connection)
 
