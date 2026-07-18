@@ -36,26 +36,94 @@ A fault arrives over REST or MQTT. TORQ retrieves relevant OEM guidance and past
 
 ## Pipeline
 
+A fault enters over MQTT or REST and leaves as a dispatched, approval-ready fix.
+The diagnosis stage is a reasoning agent grounded in the plant's own documents,
+and every external hop degrades to a local fallback so a live demo cannot hard-fail.
+
 ```mermaid
-flowchart TD
-    A[REST or MQTT fault event] --> B[Hybrid knowledge retrieval]
-    K[(OEM manuals + repair history)] --> B
-    B --> C[Structured AI diagnosis]
-    C --> D[Trilingual work order]
-    D --> E{Supervisor review}
-    E -->|Reject| R[(Rejected)]
-    E -->|Approve| F[Skill-based technician routing]
-    F --> G[WhatsApp or in-app dispatch]
-    G --> H[Repair outcome]
-    H --> I[(SQLite or PostgreSQL)]
-    H -->|Resolved| K
+flowchart TB
+    classDef ingress fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef ai fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef ops fill:#ffe4e6,stroke:#e11d48,color:#881337
+    classDef store fill:#e0e7ff,stroke:#4f46e5,color:#312e81
+    classDef gate fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef fallback fill:#f1f5f9,stroke:#64748b,color:#334155,stroke-dasharray:4 3
+
+    MQTT[/"MQTT fault event"/]:::ingress
+    REST[/"REST POST /api/faults"/]:::ingress
+
+    subgraph DIAG["Grounded diagnosis"]
+      direction TB
+      CACHE{"Diagnosis cache<br/>hit within TTL?"}:::gate
+      AGENT{{"ReAct agent<br/>LangChain · LangGraph"}}:::ai
+      TOOLS["Agent tools<br/>search_manuals · search_history"]:::ai
+      subgraph RET["Hybrid retrieval, per tool call"]
+        direction LR
+        DENSE["Dense<br/>bge-small"]:::ai
+        SPARSE["Sparse<br/>BM25"]:::ai
+        RRF["RRF fusion"]:::ai
+        RERANK["Cross-encoder<br/>rerank"]:::ai
+        DENSE --> RRF
+        SPARSE --> RRF
+        RRF --> RERANK
+      end
+    end
+
+    KB[("Qdrant<br/>manuals + repair history")]:::store
+
+    MQTT --> CACHE
+    REST --> CACHE
+    CACHE -->|miss| AGENT
+    AGENT <-->|reason / act loop| TOOLS
+    TOOLS -->|"MCP on-premise boundary"| RET
+    RET --> KB
+    RERANK -->|"evidence + cited sources"| AGENT
+    AGENT -->|structured Diagnosis| WO
+
+    WO["Work order<br/>+ FR / AR translation"]:::ops
+    PDF["Trilingual PDF<br/>Amiri · HarfBuzz shaping"]:::ops
+    GATE{"Supervisor review"}:::gate
+    ROUTE["Skill-matched<br/>technician routing"]:::ops
+    DISP["WhatsApp / in-app dispatch"]:::ops
+    OUT["Repair outcome"]:::ops
+    DB[("SQLite / PostgreSQL")]:::store
+
+    WO --> PDF
+    WO --> GATE
+    CACHE -.->|"hit: reuse, skip LLM"| WO
+    GATE -->|reject| DB
+    GATE -->|approve| ROUTE
+    ROUTE --> DISP
+    DISP --> OUT
+    OUT --> DB
+    OUT -->|"resolved fix re-indexed"| KB
+
+    AGENT -.->|agent loop fails| ONESHOT["One-shot diagnosis"]:::fallback
+    ONESHOT -.->|LLM / retrieval down| STUB["Manual-review stub<br/>never 500s"]:::fallback
+    ONESHOT -.-> WO
+    STUB -.-> WO
+
+    SSE(["Live SSE feed → dashboard"]):::ingress
+    CACHE -.-> SSE
+    WO -.-> SSE
+    DISP -.-> SSE
 ```
+
+Legend: solid = happy path, dashed = graceful-degradation fallbacks and the live
+activity stream. The three retrieval boxes run inside every agent tool call, and
+the same reason/act loop can search again with a refined query before answering.
 
 ## Features
 
 ### Retrieval-grounded diagnosis
 
 TORQ combines dense embeddings and BM25 sparse search in Qdrant, fuses the results with reciprocal rank fusion, and optionally reranks them with a cross-encoder. Diagnoses use both OEM manual excerpts and machine-specific repair history before falling back to broader historical matches.
+
+### Reasoning agent with graceful degradation
+
+Diagnosis is a real ReAct (reason/act) agent built on LangChain and LangGraph, not a single prompt. It decides when to call `search_manuals` versus `search_history`, can refine its query and search again, and records an ordered investigation trail that ships with the work order. Retrieval flows through the MCP knowledge server, so proprietary manuals are read behind an on-premise boundary and never leave the plant.
+
+The path degrades in three tiers so a live demo cannot hard-fail: the multi-step agent falls back to a single-shot diagnosis if the loop errors, then to a manual-review stub if the model or retrieval is unreachable, always returning a work order instead of a 500. A short-TTL diagnosis cache reuses a recent result for a repeated fault and skips the LLM call entirely.
 
 ### Approval-first work orders
 
@@ -77,7 +145,9 @@ The built-in dashboard supports fault simulation, approval, rejection, resolutio
 
 Use TORQ through its REST API, MQTT listener, React dashboard, or MCP server. The MCP interface exposes manual and repair-history search as standalone tools for compatible AI clients.
 
-## diagram
+## Architecture
+
+Module-level map of the codebase: interfaces feed one orchestrator, which drives the knowledge, work-order, and dispatch layers over shared storage. Nodes link to source.
 
 ```mermaid
 flowchart TD
@@ -346,8 +416,8 @@ assets/              Logos and PDF fonts
 | Layer | Technology |
 | --- | --- |
 | API and validation | FastAPI, Pydantic |
-| AI | OpenAI-compatible chat completions |
-| Retrieval | Qdrant, FastEmbed, dense + BM25, RRF, cross-encoder reranking |
+| Diagnosis agent | LangChain + LangGraph ReAct agent, OpenAI SDK, OpenAI-compatible endpoint (DeepSeek by default) |
+| Retrieval | Qdrant, FastEmbed, dense (bge-small) + BM25, RRF, cross-encoder reranking |
 | Events and tools | MQTT, MCP |
 | Persistence | SQLite by default, optional PostgreSQL |
 | Dispatch | Twilio WhatsApp with in-app fallback |
