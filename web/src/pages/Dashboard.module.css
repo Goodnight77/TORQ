@@ -405,6 +405,14 @@
 
 /* ── Buttons ── */
 
+.actionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 4px 0 8px;
+  flex-wrap: wrap;
+}
+
 .simBtn {
   background: var(--text-primary);
   color: var(--bg-primary);
@@ -416,7 +424,6 @@
   font-weight: 700;
   font-size: 13px;
   letter-spacing: 0.01em;
-  margin: 4px 0 8px;
   transition: opacity 0.2s, background 0.35s, color 0.35s;
 }
 
@@ -427,6 +434,75 @@
 
 .simBtn:hover:not(:disabled) {
   opacity: 0.85;
+}
+
+/* ── Manual fault form ── */
+
+.manualForm {
+  position: relative;
+}
+
+.manualFormToggle {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 22px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.35s;
+}
+
+.manualFormToggle:hover {
+  background: var(--surface);
+  border-color: var(--text-primary);
+}
+
+.manualFormBody {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 300px;
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  transition: background 0.35s, border-color 0.35s;
+}
+
+.manualFormInput {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  outline: none;
+  transition: background 0.35s, border-color 0.35s, color 0.35s;
+}
+
+.manualFormInput:focus {
+  border-color: var(--text-primary);
+}
+
+.manualFormInput::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.manualFormBody .approveBtn {
+  align-self: flex-end;
 }
 
 .approveBtn {

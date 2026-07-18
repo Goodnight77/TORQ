@@ -416,6 +416,59 @@ function StatusFilter({ value, onChange, t }) {
   );
 }
 
+function ManualFaultForm({ onReport, busy }) {
+  const [open, setOpen] = useState(false);
+  const [machine, setMachine] = useState("");
+  const [faultCode, setFaultCode] = useState("");
+  const [context, setContext] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!machine || !faultCode) return;
+    onReport({ machine, fault_code: faultCode, context });
+    setMachine("");
+    setFaultCode("");
+    setContext("");
+    setOpen(false);
+  };
+
+  return (
+    <div className={styles.manualForm}>
+      <button className={styles.manualFormToggle} onClick={() => setOpen(!open)}>
+        {open ? "−" : "+"} Report a fault
+      </button>
+      {open && (
+        <form className={styles.manualFormBody} onSubmit={handleSubmit}>
+          <input
+            className={styles.manualFormInput}
+            placeholder="Machine (e.g. CM-350 Line 2)"
+            value={machine}
+            onChange={(e) => setMachine(e.target.value)}
+            required
+          />
+          <input
+            className={styles.manualFormInput}
+            placeholder="Fault code (e.g. E-471)"
+            value={faultCode}
+            onChange={(e) => setFaultCode(e.target.value)}
+            required
+          />
+          <textarea
+            className={styles.manualFormInput}
+            placeholder="Context / observations (optional)"
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            rows={2}
+          />
+          <button className={styles.approveBtn} type="submit" disabled={busy}>
+            Submit fault
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { t } = useI18n();
   const toast = useToast();
@@ -567,9 +620,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        <button className={styles.simBtn} disabled={busy || loading} onClick={simulate}>
-          {t("dashboard.simulate")}
-        </button>
+        <div className={styles.actionRow}>
+          <button className={styles.simBtn} disabled={busy || loading} onClick={simulate}>
+            {t("dashboard.simulate")}
+          </button>
+          <ManualFaultForm onReport={(msg) => act(() => api.reportFault(msg), t("dashboard.toast_simulated"))} busy={busy} />
+        </div>
 
         <h2 className={styles.sectionTitle}>{t("dashboard.pending")}</h2>
         <div className={styles.tableWrap}>
