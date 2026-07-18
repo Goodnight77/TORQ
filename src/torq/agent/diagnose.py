@@ -133,18 +133,21 @@ def _chat(client: OpenAI, messages: list[dict], json_mode: bool = True):
 
 # ── diagnosis cache ──────────────────────────────────────────────────────────
 
-# Recent diagnoses keyed by (machine, fault_code). A repeat fault within the TTL
-# reuses the cached result and skips the retrieval + LLM round-trip. No lock: a
-# rare race just costs a redundant diagnosis, it never corrupts state. Copies go
-# in and out so a caller mutating a Diagnosis cannot poison the cache.
-_CACHE: dict[tuple[str, str], tuple[float, Diagnosis]] = {}
+# Recent diagnoses keyed by (machine, fault_code, context). A repeat fault with
+# the same context within the TTL reuses the cached result and skips the
+# retrieval + LLM round-trip. Context is part of the key so a recurring fault
+# described differently (new symptom text) re-diagnoses instead of reusing a
+# stale answer. No lock: a rare race just costs a redundant diagnosis, it never
+# corrupts state. Copies go in and out so a caller mutating a Diagnosis cannot
+# poison the cache.
+_CACHE: dict[tuple[str, str, str], tuple[float, Diagnosis]] = {}
 
 
 # ── main entry point ─────────────────────────────────────────────────────────
 
 
 def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis:
-    key = (machine, fault_code)
+    key = (machine, fault_code, context)
     ttl = settings.diagnose_cache_ttl
     if ttl > 0:
         hit = _CACHE.get(key)

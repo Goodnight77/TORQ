@@ -51,11 +51,17 @@ class DiagnoseCacheTests(unittest.TestCase):
             diag_mod.diagnose("E-201", "CM-350")
         self.assertEqual(self.mock_chat.call_count, 2)
 
+    def test_different_context_not_shared(self) -> None:
+        diag_mod.diagnose("E-471", "CM-350", "overtemp after 6h runtime")
+        diag_mod.diagnose("E-471", "CM-350", "recurring overtemp, lint buildup")
+        self.assertEqual(self.mock_chat.call_count, 2)  # context busts the cache
+
     def test_expired_entry_recomputes(self) -> None:
         diag_mod.diagnose("E-201", "CM-350")
         # Force the cached entry to look expired.
-        _exp, diag = diag_mod._CACHE[("CM-350", "E-201")]
-        diag_mod._CACHE[("CM-350", "E-201")] = (time.monotonic() - 1, diag)
+        key = ("CM-350", "E-201", "")
+        _exp, diag = diag_mod._CACHE[key]
+        diag_mod._CACHE[key] = (time.monotonic() - 1, diag)
         diag_mod.diagnose("E-201", "CM-350")
         self.assertEqual(self.mock_chat.call_count, 2)
 

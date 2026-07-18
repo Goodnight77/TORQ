@@ -62,9 +62,9 @@ class Settings(BaseSettings):
     # Chunking (chonkie markdown-aware; keeps each fault-code section whole)
     manual_chunk_size: int = 1800
 
-    # Diagnosis cache: reuse a recent diagnosis for the same (machine, fault_code)
-    # instead of re-calling the LLM. Cuts latency and cost on repeat faults.
-    # 0 disables. Seconds.
+    # Diagnosis cache: reuse a recent diagnosis for the same (machine, fault_code,
+    # context) instead of re-calling the LLM. Cuts latency and cost on repeat
+    # faults. 0 disables. Seconds.
     diagnose_cache_ttl: int = 600
 
     # Retrieval
