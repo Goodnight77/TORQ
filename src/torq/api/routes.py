@@ -154,6 +154,30 @@ def recent_events():
     return [event for _seq, event in live.RECENT_FAULTS]
 
 
+@router.get("/events/activity/stream")
+async def activity_stream(request: Request):
+    """SSE endpoint: streams pipeline activity (received -> diagnosed -> dispatched)."""
+
+    async def generate():
+        last_seq = 0
+        while True:
+            for seq, event in list(live.RECENT_ACTIVITY):
+                if seq > last_seq:
+                    yield f"event: activity\ndata: {json.dumps(event)}\n\n"
+                    last_seq = seq
+            if await request.is_disconnected():
+                break
+            await asyncio.sleep(0.5)
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@router.get("/events/activity/recent")
+def recent_activity():
+    """Return the recent pipeline activity entries (oldest first)."""
+    return [event for _seq, event in live.RECENT_ACTIVITY]
+
+
 @router.get("/eval")
 def eval_results():
     """Precomputed retrieval-eval results (dense vs hybrid vs hybrid+rerank)."""

@@ -53,7 +53,7 @@
 
 .hero {
   position: relative;
-  padding: 140px 24px 120px;
+  padding: 80px 24px 160px;
   text-align: center;
   overflow: hidden;
   isolation: isolate;
@@ -203,11 +203,9 @@
   background: var(--surface);
 }
 
-/* ── Stats bar ── */
 
 .statsSection {
   padding: 0 24px;
-  margin-top: -20px;
   position: relative;
   z-index: 2;
 }
@@ -285,13 +283,11 @@
   transition: color 0.35s;
 }
 
-/* ── Pipeline section ── */
 
 .pipelineSection {
   padding: 96px 0;
 }
 
-/* ── Features section ── */
 
 .featuresSection {
   padding: 96px 0;
@@ -305,7 +301,6 @@
   gap: 24px;
 }
 
-/* ── How it works section ── */
 
 .howSection {
   padding: 96px 0;
@@ -330,7 +325,6 @@
   flex-direction: column;
   gap: 0;
   position: relative;
-  padding-left: 20px;
 }
 
 .steps::before {
@@ -393,7 +387,6 @@
   transition: color 0.35s;
 }
 
-/* ── CTA section ── */
 
 .ctaSection {
   padding: 120px 24px;
@@ -439,7 +432,6 @@
   transition: color 0.35s;
 }
 
-/* ── Fade-up animation ── */
 
 .fadeUp {
   opacity: 0;
@@ -535,3 +527,4 @@
     max-width: 100%;
   }
 }
+

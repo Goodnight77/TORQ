@@ -3,6 +3,7 @@
 from torq.agent.schemas import WorkOrder, _now
 from torq.db import models
 from torq.dispatch import notify, routing
+from torq.events import live
 from torq.workorder.pdf import render_pdf
 
 
@@ -23,6 +24,7 @@ def reject(wo_id: str) -> WorkOrder | None:
         return None
     wo.status = "rejected"
     models.save(wo)
+    live.push_activity("rejected", wo.machine, wo.fault_code, wo_id=wo.id)
     return wo
 
 
@@ -31,10 +33,15 @@ def approve(wo_id: str) -> tuple[WorkOrder, dict] | None:
     wo = models.get(wo_id)
     if not wo:
         return None
+    live.push_activity("approved", wo.machine, wo.fault_code, wo_id=wo.id)
     tech = routing.choose_technician(wo)
     if not tech:
         wo.status = "approved"  # approved but no one on shift to take it
         models.save(wo)
+        live.push_activity(
+            "dispatch_failed", wo.machine, wo.fault_code,
+            detail="no technician on shift", wo_id=wo.id,
+        )
         return wo, {"channel": "none", "error": "no technician available"}
 
     try:
@@ -47,4 +54,8 @@ def approve(wo_id: str) -> tuple[WorkOrder, dict] | None:
     wo.assigned_to = tech.get("name")
     wo.dispatched_at = _now()
     models.save(wo)
+    live.push_activity(
+        "dispatched", wo.machine, wo.fault_code,
+        detail=f"{delivery.get('channel', '?')} to {tech.get('name', '?')}", wo_id=wo.id,
+    )
     return wo, delivery
