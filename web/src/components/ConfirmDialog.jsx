@@ -1,9 +1,11 @@
 import { useEffect, useRef, useCallback } from "react";
+import useFocusTrap from "../hooks/useFocusTrap";
 import styles from "./ConfirmDialog.module.css";
 
 export default function ConfirmDialog({ open, message, confirmLabel, cancelLabel, onConfirm, onCancel, busy }) {
   const confirmRef = useRef(null);
   const previousFocus = useRef(null);
+  const dialogRef = useFocusTrap(open);
 
   useEffect(() => {
     if (open) {
@@ -32,6 +34,7 @@ export default function ConfirmDialog({ open, message, confirmLabel, cancelLabel
   return (
     <div className={styles.overlay} onClick={onCancel}>
       <div
+        ref={dialogRef}
         className={styles.dialog}
         role="alertdialog"
         aria-modal="true"

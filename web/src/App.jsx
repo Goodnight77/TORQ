@@ -13,7 +13,7 @@ function PageTitle() {
     if (pathname === "/dashboard") {
       document.title = `${t("dashboard.title")} — TORQ`;
     } else {
-      document.title = "TORQ — Fault-to-Fix Engine";
+      document.title = t("app.title");
     }
   }, [pathname, t]);
 

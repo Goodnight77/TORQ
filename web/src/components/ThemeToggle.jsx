@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "../i18n";
 import styles from "./ThemeToggle.module.css";
 
 function getInitial() {
@@ -8,6 +9,7 @@ function getInitial() {
 }
 
 export default function ThemeToggle() {
+  const { t } = useI18n();
   const [theme, setTheme] = useState(getInitial);
 
   useEffect(() => {
@@ -19,9 +21,9 @@ export default function ThemeToggle() {
     <button
       className={styles.toggle}
       onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      aria-label={theme === "dark" ? t("theme_toggle.light") : t("theme_toggle.dark")}
     >
-      <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg aria-hidden="true" className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         {theme === "light" ? (
           <>
             <circle cx="12" cy="12" r="5" />

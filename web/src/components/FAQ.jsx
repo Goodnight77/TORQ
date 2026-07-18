@@ -18,17 +18,28 @@ export default function FAQ({ dark }) {
 
   return (
     <div className={`${styles.faq} ${dark ? styles.dark : ""}`}>
-      {items.map((item, i) => (
-        <div key={i} className={`${styles.item} ${openIndex === i ? styles.open : ""}`}>
-          <button className={styles.question} onClick={() => setOpenIndex(openIndex === i ? null : i)}>
-            <span>{item.q}</span>
-            <span className={styles.chevron}>+</span>
-          </button>
-          <div className={styles.answer}>
-            <div className={styles.answerInner}>{item.a}</div>
+      {items.map((item, i) => {
+        const isOpen = openIndex === i;
+        const panelId = `faq-panel-${i}`;
+        const btnId = `faq-btn-${i}`;
+        return (
+          <div key={i} className={`${styles.item} ${isOpen ? styles.open : ""}`}>
+            <button
+              id={btnId}
+              className={styles.question}
+              onClick={() => setOpenIndex(isOpen ? null : i)}
+              aria-expanded={isOpen}
+              aria-controls={panelId}
+            >
+              <span>{item.q}</span>
+              <span className={styles.chevron}>+</span>
+            </button>
+            <div id={panelId} className={styles.answer} role="region" aria-labelledby={btnId}>
+              <div className={styles.answerInner}>{item.a}</div>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

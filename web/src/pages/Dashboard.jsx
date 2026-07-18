@@ -8,6 +8,7 @@ import Navbar from "../components/Navbar.jsx";
 import { useI18n } from "../i18n";
 import { useToast } from "../toast.jsx";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import useFocusTrap from "../hooks/useFocusTrap";
 import styles from "./Dashboard.module.css";
 
 const CONFIDENCE_THRESHOLD = 0.6;
@@ -53,10 +54,11 @@ function MachineDrawer({ machine, workOrders, downtime, onClose, onSelectWorkOrd
   const open = history.filter((w) => OPEN_STATUS.has(w.status));
   const model = downtime?.model || machine;
   const location = downtime?.location;
+  const panelRef = useFocusTrap(!!machine);
 
   return (
     <div className={styles.drawer} onClick={onClose}>
-      <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
+      <div ref={panelRef} className={styles.panel} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeBtn} onClick={onClose}>{t("dashboard.close")}</button>
         <h3 className={styles.panelTitle}>{machine}</h3>
         <p className={styles.sub}>{model}{location ? ` - ${location}` : ""}</p>
@@ -396,6 +398,7 @@ function FaultsPerMachineChart({ data, t }) {
 function Drawer({ workOrder, onClose, onNotify, busy, t }) {
   const w = workOrder;
   if (!w) return null;
+  const panelRef = useFocusTrap(!!w);
 
   const meta = [
     { key: "status", label: t("dashboard.status"), value: w.status },
@@ -407,7 +410,7 @@ function Drawer({ workOrder, onClose, onNotify, busy, t }) {
 
   return (
     <div className={styles.drawer} onClick={onClose}>
-      <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
+      <div ref={panelRef} className={styles.panel} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeBtn} onClick={onClose}>{t("dashboard.close")}</button>
         <h3 className={styles.panelTitle}>{w.machine} &mdash; {w.fault_code}</h3>
 
@@ -478,7 +481,7 @@ function Drawer({ workOrder, onClose, onNotify, busy, t }) {
 
         {w.investigation?.length > 0 && (
           <details className={styles.investigation}>
-            <summary>{t("dashboard.agent_investigation")} ({w.investigation.length} steps)</summary>
+            <summary>{t("dashboard.agent_investigation")} ({w.investigation.length} {t("dashboard.steps")})</summary>
             <ol>
               {w.investigation.map((s, i) => <li key={i}>{s}</li>)}
             </ol>
@@ -673,9 +676,10 @@ export default function Dashboard() {
 
   return (
     <div className={styles.page}>
+      <a href="#main-content" className="skip-link">{t("nav.skip_to_content")}</a>
       <Navbar />
 
-      <div className={styles.app}>
+      <main id="main-content" className={styles.app}>
         <header className={styles.header}>
           <h1 className={styles.heading}>{t("dashboard.title")}</h1>
           <p className={styles.sub}>{t("dashboard.subtitle")}</p>
@@ -872,7 +876,7 @@ export default function Dashboard() {
         />
 
         <p className={styles.footer}>{t("dashboard.footer")}</p>
-      </div>
+      </main>
     </div>
   );
 }

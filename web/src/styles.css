@@ -220,6 +220,39 @@ button:active { transform: scale(0.97); }
   cursor: pointer;
 }
 
+/* ── Screen-reader only ── */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  inset-inline-start: 0;
+  z-index: 1000;
+  padding: 10px 20px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
 /* ── Dashboard errored state ── */
 
 .dashboardError {

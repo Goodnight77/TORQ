@@ -111,8 +111,10 @@ export default function LandingPage() {
 
   return (
     <div className={styles.page}>
+      <a href="#main-content" className="skip-link">{t("nav.skip_to_content")}</a>
       <Navbar />
 
+      <main id="main-content">
       {/* ── Hero ── */}
       <section className={styles.hero}>
         <div className={styles.heroBg} />
@@ -268,6 +270,7 @@ export default function LandingPage() {
       </section>
 
       <Footer />
+      </main>
     </div>
   );
 }
