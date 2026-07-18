@@ -1,0 +1,88 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  animation: fadeIn 0.15s ease;
+}
+
+.dialog {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 28px;
+  max-width: 400px;
+  width: 90vw;
+  box-shadow: var(--shadow-xl);
+  animation: scaleIn 0.15s ease;
+  transition: background 0.35s, border-color 0.35s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.message {
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--text-primary);
+  margin: 0 0 24px;
+  line-height: 1.5;
+  transition: color 0.35s;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancelBtn {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  transition: color 0.2s, background 0.35s, border-color 0.35s;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.confirmBtn {
+  background: transparent;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+  border-radius: 8px;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.confirmBtn:hover:not(:disabled) {
+  background: rgba(248, 81, 73, 0.08);
+}
+
+.cancelBtn:disabled,
+.confirmBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

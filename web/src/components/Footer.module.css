@@ -2,6 +2,8 @@
   background: var(--brand);
   color: var(--white);
   padding: 80px 24px 28px;
+  --text-primary: var(--white);
+  --text-muted: rgba(255, 255, 255, 0.55);
 }
 
 [data-theme="dark"] .footer,

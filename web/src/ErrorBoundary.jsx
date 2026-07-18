@@ -1,6 +1,9 @@
 import { Component } from "react";
+import { I18nContext } from "./i18n";
 
 export default class ErrorBoundary extends Component {
+  static contextType = I18nContext;
+
   constructor(props) {
     super(props);
     this.state = { error: null };
@@ -12,11 +15,12 @@ export default class ErrorBoundary extends Component {
 
   render() {
     if (this.state.error) {
+      const { t } = this.context;
       return (
         <div className="errorBoundary">
-          <h1>Something went wrong</h1>
+          <h1>{t("error_boundary.title")}</h1>
           <pre>{this.state.error.message}</pre>
-          <button onClick={() => window.location.reload()}>Reload page</button>
+          <button onClick={() => window.location.reload()}>{t("error_boundary.reload")}</button>
         </div>
       );
     }

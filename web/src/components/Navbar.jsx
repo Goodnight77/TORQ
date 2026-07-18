@@ -33,10 +33,10 @@ export default function Navbar() {
           </svg>
         </Link>
         <div className={styles.navLinks}>
-          <a href={h("#pipeline")} className={styles.link}>Pipeline</a>
-          <a href={h("#features")} className={styles.link}>Features</a>
-          <a href={h("#how-it-works")} className={styles.link}>How it works</a>
-          <a href={h("#faq")} className={styles.link}>FAQ</a>
+          <a href={h("#pipeline")} className={styles.link}>{t("navbar.pipeline")}</a>
+          <a href={h("#features")} className={styles.link}>{t("navbar.features")}</a>
+          <a href={h("#how-it-works")} className={styles.link}>{t("navbar.how_it_works")}</a>
+          <a href={h("#faq")} className={styles.link}>{t("navbar.faq")}</a>
           <Link to="/dashboard" className={styles.link}>{t("navbar.dashboard")}</Link>
         </div>
         <div className={styles.right}>

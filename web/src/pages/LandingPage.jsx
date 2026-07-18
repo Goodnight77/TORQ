@@ -231,25 +231,25 @@ export default function LandingPage() {
       {/* ── FAQ ── */}
       <section className={styles.faqSection} id="faq">
         <div className={styles.sectionInner}>
-          <SectionTitle subtitle="Common questions about TORQ.">
-            FAQ
+          <SectionTitle subtitle={t("landing.faq_subtitle")}>
+            {t("landing.faq_title")}
           </SectionTitle>
           <div className={styles.faqGrid}>
             <div className={styles.faqCard}>
-              <h3>How does TORQ retrieve documentation?</h3>
-              <p>We use a hybrid search approach (dense vector + BM25) coupled with a cross-encoder reranker to pinpoint the exact paragraphs needed for any fault code.</p>
+              <h3>{t("landing.faq_card_1_title")}</h3>
+              <p>{t("landing.faq_card_1_desc")}</p>
             </div>
             <div className={styles.faqCard}>
-              <h3>Can I add my own manuals?</h3>
-              <p>Yes. TORQ ingests standard PDF manuals, translates them, and chunks them automatically into the knowledge base.</p>
+              <h3>{t("landing.faq_card_2_title")}</h3>
+              <p>{t("landing.faq_card_2_desc")}</p>
             </div>
             <div className={styles.faqCard}>
-              <h3>What languages are supported?</h3>
-              <p>Currently, the TORQ agent outputs in English, French, and Arabic to support diverse maintenance teams.</p>
+              <h3>{t("landing.faq_card_3_title")}</h3>
+              <p>{t("landing.faq_card_3_desc")}</p>
             </div>
             <div className={styles.faqCard}>
-              <h3>Is my factory data secure?</h3>
-              <p>Absolutely. TORQ runs entirely on isolated infrastructure with zero data leakage to public models.</p>
+              <h3>{t("landing.faq_card_4_title")}</h3>
+              <p>{t("landing.faq_card_4_desc")}</p>
             </div>
           </div>
         </div>

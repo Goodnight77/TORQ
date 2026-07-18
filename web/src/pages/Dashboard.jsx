@@ -7,6 +7,7 @@ import * as api from "../api.js";
 import Navbar from "../components/Navbar.jsx";
 import { useI18n } from "../i18n";
 import { useToast } from "../toast.jsx";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import styles from "./Dashboard.module.css";
 
 const CONFIDENCE_THRESHOLD = 0.6;
@@ -179,15 +180,20 @@ function formatTime(ts, t) {
   return new Date(ts).toLocaleDateString();
 }
 
-const STAGE_LABEL = {
-  fault_received: "Fault detected",
-  diagnosing: "Diagnosing",
-  work_order_created: "Work order ready",
-  approved: "Approved",
-  dispatched: "Dispatched",
-  dispatch_failed: "Dispatch failed",
-  rejected: "Rejected",
+const STAGE_KEYS = {
+  fault_received: "dashboard.stage_fault_received",
+  diagnosing: "dashboard.stage_diagnosing",
+  work_order_created: "dashboard.stage_work_order_created",
+  approved: "dashboard.stage_approved",
+  dispatched: "dashboard.stage_dispatched",
+  dispatch_failed: "dashboard.stage_dispatch_failed",
+  rejected: "dashboard.stage_rejected",
 };
+
+function stageLabel(stage, t) {
+  const key = STAGE_KEYS[stage];
+  return key ? t(key) : stage;
+}
 
 function clockTime(ts) {
   if (!ts) return "";
@@ -200,7 +206,7 @@ function clockTime(ts) {
 
 // Live pipeline log. Backfills from REST, then streams new stages over SSE
 // (EventSource auto-reconnects on drop, so no polling and no manual retry).
-function ActivityLog() {
+function ActivityLog({ t }) {
   const [entries, setEntries] = useState([]);
 
   useEffect(() => {
@@ -217,7 +223,7 @@ function ActivityLog() {
         /* ignore malformed frame */
       }
     });
-    es.onerror = () => setEntries((prev) => [...prev, { type: "disconnected", detail: "SSE lost" }]);
+    es.onerror = () => setEntries((prev) => [...prev, { type: "disconnected", detail: t("dashboard.load_error") }]);
     return () => {
       alive = false;
       es.close();
@@ -228,16 +234,16 @@ function ActivityLog() {
 
   return (
     <div className={styles.card}>
-      <div className={styles.cardHead}>Activity log</div>
+      <div className={styles.cardHead}>{t("dashboard.activity_log")}</div>
       {rows.length === 0 ? (
-        <div className={styles.feedEmpty}>No activity yet</div>
+        <div className={styles.feedEmpty}>{t("dashboard.no_activity")}</div>
       ) : (
         <div className={styles.activityList}>
           {rows.map((e, i) => (
             <div key={i} className={styles.activityRow}>
               <span className={styles.activityTime}>{clockTime(e.ts)}</span>
               <span className={`${styles.activityStage} ${styles[e.stage] || ""}`}>
-                {STAGE_LABEL[e.stage] || e.stage}
+                {stageLabel(e.stage, t)}
               </span>
               <span className={styles.activityText}>
                 {e.machine} {e.fault_code}
@@ -422,7 +428,7 @@ function Drawer({ workOrder, onClose, onNotify, busy, t }) {
         </a>
 
         <button className={styles.simBtn} style={{ marginTop: 12 }} disabled={busy} onClick={() => onNotify(w)}>
-          Send WhatsApp to technician
+          {t("dashboard.send_whatsapp")}
         </button>
 
         {w.root_cause && <p className={styles.cause}>{w.root_cause}</p>}
@@ -494,7 +500,7 @@ function Drawer({ workOrder, onClose, onNotify, busy, t }) {
 
 function StatusFilter({ value, onChange, t }) {
   return (
-    <select className={styles.filterSelect} value={value} onChange={(e) => onChange(e.target.value)} aria-label="Filter by status">
+    <select className={styles.filterSelect} value={value} onChange={(e) => onChange(e.target.value)} aria-label={t("dashboard.filter_by_status")}>
       <option value="">{t("dashboard.all_statuses")}</option>
       <option value="pending">{t("dashboard.pending")}</option>
       <option value="dispatched">{t("dashboard.dispatched")}</option>
@@ -569,6 +575,7 @@ export default function Dashboard() {
   const [fpmData, setFpmData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [machineDetail, setMachineDetail] = useState(null);
+  const [confirmReject, setConfirmReject] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errored, setErrored] = useState(false);
@@ -674,7 +681,7 @@ export default function Dashboard() {
           <p className={styles.sub}>{t("dashboard.subtitle")}</p>
         </header>
 
-        {errored && <div className="dashboardError">Could not load data — check connection</div>}
+        {errored && <div className="dashboardError">{t("dashboard.load_error")}</div>}
 
         <section className={styles.tiles}>
           {loading ? (
@@ -696,7 +703,7 @@ export default function Dashboard() {
 
         <LiveFeed faults={sortedFaults} t={t} />
 
-        <ActivityLog />
+        <ActivityLog t={t} />
 
         <div className={styles.grid}>
           {loading ? (
@@ -759,7 +766,7 @@ export default function Dashboard() {
                       <button className={styles.approveBtn} disabled={busy} onClick={() => act(() => api.approve(w.id), `${t("dashboard.toast_approved")} — ${w.id}`)}>
                         {t("dashboard.approve")}
                       </button>
-                      <button className={styles.rejectBtn} disabled={busy} onClick={() => act(() => api.reject(w.id), `${t("dashboard.toast_rejected")} — ${w.id}`)}>
+                      <button className={styles.rejectBtn} disabled={busy} onClick={() => setConfirmReject(w)}>
                         {t("dashboard.reject")}
                       </button>
                     </td>
@@ -783,7 +790,7 @@ export default function Dashboard() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
-              <button className={styles.clearBtn} onClick={() => setSearchQuery("")} aria-label="Clear search">
+              <button className={styles.clearBtn} onClick={() => setSearchQuery("")} aria-label={t("dashboard.clear_search")}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
@@ -833,9 +840,23 @@ export default function Dashboard() {
         <Drawer
           workOrder={selected}
           onClose={() => setSelected(null)}
-          onNotify={(w) => act(() => api.notify(w.id), "WhatsApp sent to technician")}
+          onNotify={(w) => act(() => api.notify(w.id), t("dashboard.whatsapp_sent"))}
           busy={busy}
           t={t}
+        />
+
+        <ConfirmDialog
+          open={!!confirmReject}
+          message={t("dashboard.confirm_reject")}
+          confirmLabel={t("dashboard.reject")}
+          cancelLabel={t("dashboard.cancel")}
+          onConfirm={() => {
+            const w = confirmReject;
+            setConfirmReject(null);
+            act(() => api.reject(w.id), `${t("dashboard.toast_rejected")} — ${w.id}`);
+          }}
+          onCancel={() => setConfirmReject(null)}
+          busy={busy}
         />
 
         <MachineDrawer
