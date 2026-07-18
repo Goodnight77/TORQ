@@ -756,7 +756,17 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className={styles.muted}>{t("dashboard.loading")}</td></tr>
+                <>
+                  {[1,2,3].map((r) => (
+                    <tr key={r}>
+                      <td><Skeleton width={90} height={16} /></td>
+                      <td><Skeleton width={120} height={16} /></td>
+                      <td><Skeleton width={70} height={16} /></td>
+                      <td><Skeleton height={16} /></td>
+                      <td><Skeleton width={80} height={32} style={{ marginLeft: "auto" }} /></td>
+                    </tr>
+                  ))}
+                </>
               ) : pending.length === 0 ? (
                 <tr><td colSpan={5} className={styles.muted}>{t("dashboard.queue_empty")}</td></tr>
               ) : (
@@ -816,7 +826,18 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className={styles.muted}>{t("dashboard.loading")}</td></tr>
+                <>
+                  {[1,2,3].map((r) => (
+                    <tr key={r}>
+                      <td><Skeleton width={90} height={16} /></td>
+                      <td><Skeleton width={120} height={16} /></td>
+                      <td><Skeleton width={70} height={16} /></td>
+                      <td><Skeleton width={80} height={16} /></td>
+                      <td><Skeleton width={100} height={16} /></td>
+                      <td><Skeleton width={80} height={32} style={{ marginLeft: "auto" }} /></td>
+                    </tr>
+                  ))}
+                </>
               ) : filteredAll.length === 0 ? (
                 <tr><td colSpan={6} className={styles.muted}>{t("dashboard.no_orders")}</td></tr>
               ) : (
