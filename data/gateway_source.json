@@ -1,0 +1,32 @@
+[
+  {
+    "machine_id": "CM-350 Line 2",
+    "fault_code": "E-471",
+    "severity": 4,
+    "context": "Conveyor motor overtemperature — PTC tripped after 6h runtime."
+  },
+  {
+    "machine_id": "CM-350 Line 1",
+    "fault_code": "E-201",
+    "severity": 5,
+    "context": "Motor start failure — overcurrent on ramp-up, possible seized bearing."
+  },
+  {
+    "machine_id": "PK-9 Line 3",
+    "fault_code": "J-108",
+    "severity": 3,
+    "context": "Packaging unit halted — film feed jam at roller nip."
+  },
+  {
+    "machine_id": "PK-9 Line 3",
+    "fault_code": "J-233",
+    "severity": 4,
+    "context": "Seal temperature low — heater cartridge or thermocouple degraded."
+  },
+  {
+    "machine_id": "CM-350 Line 2",
+    "fault_code": "E-471",
+    "severity": 3,
+    "context": "Recurring overtemp — lint buildup on intake louvers, 3 weeks since last clean."
+  }
+]

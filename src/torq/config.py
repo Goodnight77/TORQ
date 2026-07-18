@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     twilio_whatsapp_from: str = ""
 
     # MQTT (machine fault events). Public broker by default; $0, no auth.
+    # Public unauthenticated broker + fixed topic means anyone can publish fake
+    # faults (each spawns a diagnosis run) or read plant data. For production,
+    # point at an authenticated broker over TLS and set credentials.
     mqtt_broker_url: str = "broker.hivemq.com"
     mqtt_port: int = 1883
     mqtt_topic: str = "torq/demo/faults"
@@ -76,3 +79,5 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
