@@ -11,7 +11,10 @@ def _load_roster(shifts_file: Path | None = None) -> list[dict]:
     shifts_file = shifts_file or settings.shifts_file
     if not shifts_file.exists():
         return []
-    return json.loads(shifts_file.read_text(encoding="utf-8"))
+    try:
+        return json.loads(shifts_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
 
 
 def choose_technician(wo: WorkOrder, roster: list[dict] | None = None) -> dict | None:
