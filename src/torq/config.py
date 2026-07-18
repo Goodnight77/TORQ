@@ -1,9 +1,11 @@
 """Runtime settings loaded from the environment / .env file."""
 
+import os
 import sys
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -21,6 +23,24 @@ class Settings(BaseSettings):
     # the reasoner model lacks, so default to the chat model.
     agent_model: str = "deepseek-chat"
     agent_max_steps: int = 8  # reason/act ceiling; generous so the agent answers vs erroring into fallback
+
+    @model_validator(mode="after")
+    def _ensure_llm_key(self):
+        if not self.llm_api_key:
+            self.llm_api_key = os.environ.get("OPENAI_API_KEY", "")
+        if not self.llm_api_key:
+            print("=" * 60)
+            print("  FATAL: No LLM API key found.")
+            print()
+            print("  Set LLM_API_KEY or OPENAI_API_KEY in your .env file")
+            print("  or export it as an environment variable.")
+            print()
+            print("  Example:")
+            print("    LLM_API_KEY=sk-...  # DeepSeek (default)")
+            print("    OPENAI_API_KEY=sk-...  # OpenAI-compatible")
+            print("=" * 60)
+            sys.exit(1)
+        return self
 
     # Vector DB (Qdrant)
     qdrant_url: str = ""
