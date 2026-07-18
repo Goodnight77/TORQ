@@ -116,6 +116,16 @@ class MachineRegistryTests(unittest.TestCase):
 
             self.assertEqual(client.get("/api/machines/missing").status_code, 404)
 
+    def test_health_check_endpoint(self) -> None:
+        with TestClient(app) as client:
+            response = client.get("/api/health")
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data["status"], "healthy")
+            self.assertTrue(data["database"]["connected"])
+            self.assertEqual(data["database"]["type"], "sqlite")
+            self.assertIn("integrations", data)
+
 
 if __name__ == "__main__":
     unittest.main()

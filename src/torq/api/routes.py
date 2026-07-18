@@ -159,15 +159,24 @@ async def event_stream(request: Request) -> StreamingResponse:
     """SSE endpoint: streams incoming MachineFaultEvent in real-time."""
 
     async def generate():
-        last_seq = 0
-        while True:
-            for seq, event in list(live.RECENT_FAULTS):
-                if seq > last_seq:
+        q = asyncio.Queue()
+        live._fault_listeners.add(q)
+        try:
+            # Replay recent faults for UI consistency on connect
+            for _seq, event in list(live.RECENT_FAULTS):
+                yield f"event: fault\ndata: {json.dumps(event)}\n\n"
+
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    event = await asyncio.wait_for(q.get(), timeout=2.0)
                     yield f"event: fault\ndata: {json.dumps(event)}\n\n"
-                    last_seq = seq
-            if await request.is_disconnected():
-                break
-            await asyncio.sleep(0.5)
+                    q.task_done()
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        finally:
+            live._fault_listeners.discard(q)
 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
@@ -183,15 +192,24 @@ async def activity_stream(request: Request) -> StreamingResponse:
     """SSE endpoint: streams pipeline activity (received -> diagnosed -> dispatched)."""
 
     async def generate():
-        last_seq = 0
-        while True:
-            for seq, event in list(live.RECENT_ACTIVITY):
-                if seq > last_seq:
+        q = asyncio.Queue()
+        live._activity_listeners.add(q)
+        try:
+            # Replay recent activity for UI consistency on connect
+            for _seq, event in list(live.RECENT_ACTIVITY):
+                yield f"event: activity\ndata: {json.dumps(event)}\n\n"
+
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    event = await asyncio.wait_for(q.get(), timeout=2.0)
                     yield f"event: activity\ndata: {json.dumps(event)}\n\n"
-                    last_seq = seq
-            if await request.is_disconnected():
-                break
-            await asyncio.sleep(0.5)
+                    q.task_done()
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        finally:
+            live._activity_listeners.discard(q)
 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
@@ -209,3 +227,105 @@ def eval_results() -> dict[str, Any]:
     if not p.exists():
         return {"configs": []}
     return json.loads(p.read_text(encoding="utf-8"))
+
+
+async def _check_db() -> tuple[bool, str]:
+    db_type = "sqlite" if not settings.database_url else "postgres"
+    try:
+        await asyncio.to_thread(models.list_machines)
+        return True, db_type
+    except Exception as e:
+        return False, f"{db_type} (error: {e})"
+
+
+async def _check_qdrant() -> bool:
+    try:
+        from torq.ingest import get_client as get_qdrant_client
+        q_client = await asyncio.to_thread(get_qdrant_client)
+        # Verify connectivity by fetching collections
+        await asyncio.to_thread(q_client.get_collections)
+        return True
+    except Exception:
+        return False
+
+
+async def _check_llm() -> bool:
+    if not settings.llm_api_key:
+        return False
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=settings.llm_api_key, base_url=settings.llm_base_url)
+        # Verify credentials by listing models (no token generation costs)
+        await asyncio.to_thread(client.models.list, timeout=2.0)
+        return True
+    except Exception:
+        return False
+
+
+async def _check_twilio() -> bool:
+    if not all([settings.twilio_account_sid, settings.twilio_auth_token, settings.twilio_whatsapp_from]):
+        return False
+    try:
+        from twilio.http.http_client import TwilioHttpClient
+        from twilio.rest import Client as TwilioClient
+        http_client = TwilioHttpClient(timeout=2.0)
+        t_client = TwilioClient(settings.twilio_account_sid, settings.twilio_auth_token, http_client=http_client)
+        # Fetch account credentials details
+        await asyncio.to_thread(
+            t_client.api.v2010.accounts(settings.twilio_account_sid).fetch
+        )
+        return True
+    except Exception:
+        return False
+
+
+async def _check_mqtt() -> bool:
+    if settings.enable_fallbacks or live.mqtt_client is None:
+        return False
+    try:
+        return live.mqtt_client.is_connected()
+    except Exception:
+        return False
+
+
+@router.get("/health")
+async def health_check() -> dict[str, Any]:
+    """Diagnostic health check of the TORQ engine and external integrations (run in parallel)."""
+    db_task = asyncio.create_task(_check_db())
+    qdrant_task = asyncio.create_task(_check_qdrant())
+    llm_task = asyncio.create_task(_check_llm())
+    twilio_task = asyncio.create_task(_check_twilio())
+    mqtt_task = asyncio.create_task(_check_mqtt())
+
+    db_ok, db_type = await db_task
+    qdrant_ok = await qdrant_task
+    llm_ok = await llm_task
+    twilio_ok = await twilio_task
+    mqtt_ok = await mqtt_task
+
+    overall_healthy = db_ok
+
+    return {
+        "status": "healthy" if overall_healthy else "unhealthy",
+        "database": {
+            "connected": db_ok,
+            "type": db_type,
+        },
+        "integrations": {
+            "qdrant": {
+                "connected": qdrant_ok,
+            },
+            "llm": {
+                "connected": llm_ok,
+                "model": settings.llm_model,
+            },
+            "twilio_whatsapp": {
+                "connected": twilio_ok,
+            },
+            "mqtt_broker": {
+                "connected": mqtt_ok,
+                "broker": settings.mqtt_broker_url,
+                "fallbacks_active": settings.enable_fallbacks,
+            },
+        },
+    }

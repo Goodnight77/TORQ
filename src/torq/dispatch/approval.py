@@ -44,10 +44,25 @@ def approve(wo_id: str) -> tuple[WorkOrder, dict] | None:
         )
         return wo, {"channel": "none", "error": "no technician available"}
 
-    try:
-        wo.pdf_path = str(render_pdf(wo))
-    except Exception as e:  # noqa: BLE001 - PDF is a nice-to-have, never block dispatch
-        print(f"[approval] PDF render skipped: {e}")
+    # Render PDF in a background thread to keep the supervisor approval response snappy
+    import threading
+
+    def _bg_render(work_order_id: str) -> None:
+        try:
+            work_order = models.get(work_order_id)
+            if work_order:
+                path = render_pdf(work_order)
+                work_order.pdf_path = str(path)
+                models.save(work_order)
+        except Exception as e:
+            print(f"[approval] background PDF render failed: {e}")
+
+    threading.Thread(
+        target=_bg_render,
+        args=(wo.id,),
+        name=f"pdf-render-{wo.id}",
+        daemon=True,
+    ).start()
 
     delivery = notify.dispatch(wo, tech)
     wo.status = "dispatched"

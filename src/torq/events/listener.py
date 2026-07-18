@@ -80,10 +80,15 @@ def _on_disconnect(
 
 
 def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> None:
-    # Runs the full diagnosis pipeline synchronously in paho's network thread.
-    # Fine at demo fault rates; if messages pile up or keepalive stalls, hand
-    # payloads to a worker queue and return here immediately.
-    handle_payload(msg.payload)
+    # Offload the execution to a daemon background thread so that Paho's network
+    # thread remains fully responsive and keepalive frames are processed on time.
+    import threading
+    threading.Thread(
+        target=handle_payload,
+        args=(msg.payload,),
+        name="mqtt-payload-handler",
+        daemon=True,
+    ).start()
 
 
 def build_client() -> mqtt.Client:

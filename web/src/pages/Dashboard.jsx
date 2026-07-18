@@ -400,6 +400,9 @@ function Drawer({ workOrder, onClose, onNotify, busy, t }) {
   if (!w) return null;
   const panelRef = useFocusTrap(!!w);
 
+  const { locale } = useI18n();
+  const [activeTab, setActiveTab] = useState(locale || "en");
+
   const meta = [
     { key: "status", label: t("dashboard.status"), value: w.status },
     { key: "assigned", label: t("dashboard.assigned"), value: w.assigned_to },
@@ -488,13 +491,44 @@ function Drawer({ workOrder, onClose, onNotify, busy, t }) {
           </details>
         )}
 
-        {["en", "fr", "ar"].map((lng) =>
-          w.content?.[lng] ? (
-            <div key={lng} className={styles.langBlock}>
-              <div className={styles.langLabel}>{lng.toUpperCase()}</div>
-              <pre dir={lng === "ar" ? "rtl" : "ltr"}>{w.content[lng]}</pre>
+        {w.content && Object.keys(w.content).length > 0 && (
+          <div className={styles.drawerSection} style={{ marginTop: 24 }}>
+            <div className={styles.drawerSectionLabel}>
+              {t("dashboard.preview_translation") || "Work Order Translation Preview"}
             </div>
-          ) : null
+            <div className={styles.tabGroup}>
+              {w.content.en && (
+                <button
+                  type="button"
+                  className={`${styles.tabBtn} ${activeTab === "en" ? styles.tabBtnActive : ""}`}
+                  onClick={() => setActiveTab("en")}
+                >
+                  English
+                </button>
+              )}
+              {w.content.fr && (
+                <button
+                  type="button"
+                  className={`${styles.tabBtn} ${activeTab === "fr" ? styles.tabBtnActive : ""}`}
+                  onClick={() => setActiveTab("fr")}
+                >
+                  Français
+                </button>
+              )}
+              {w.content.ar && (
+                <button
+                  type="button"
+                  className={`${styles.tabBtn} ${activeTab === "ar" ? styles.tabBtnActive : ""}`}
+                  onClick={() => setActiveTab("ar")}
+                >
+                  العربية
+                </button>
+              )}
+            </div>
+            <div className={styles.previewContainer} dir={activeTab === "ar" ? "rtl" : "ltr"}>
+              <pre className={styles.previewPre}>{w.content[activeTab] || w.content.en || ""}</pre>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -568,14 +602,13 @@ function ManualFaultForm({ onReport, busy, t }) {
 
 export default function Dashboard() {
   const { t } = useI18n();
-  const toast = useToast();
-
-  const [metrics, setMetrics] = useState(null);
+  const toast = useToast(); const [metrics, setMetrics] = useState(null);
   const [evalData, setEvalData] = useState(null);
   const [pending, setPending] = useState([]);
   const [all, setAll] = useState([]);
   const [trendData, setTrendData] = useState(null);
   const [fpmData, setFpmData] = useState(null);
+  const [health, setHealth] = useState(null);
   const [selected, setSelected] = useState(null);
   const [machineDetail, setMachineDetail] = useState(null);
   const [confirmReject, setConfirmReject] = useState(null);
@@ -591,13 +624,14 @@ export default function Dashboard() {
     if (inflight.current) return;
     inflight.current = true;
     try {
-      const [m, p, a, ev, trend, fpm] = await Promise.all([
+      const [m, p, a, ev, trend, fpm, h] = await Promise.all([
         api.getMetrics(),
         api.getWorkOrders("pending"),
         api.getWorkOrders(),
         api.getEval().catch(() => null),
         api.getTrend(),
         api.getFaultsPerMachine(),
+        api.getHealth(),
       ]);
       setMetrics(m);
       setPending(p);
@@ -605,6 +639,7 @@ export default function Dashboard() {
       setEvalData(ev);
       setTrendData(trend);
       setFpmData(fpm);
+      setHealth(h);
       setLoading(false);
       setErrored(false);
     } catch (e) {
@@ -685,6 +720,22 @@ export default function Dashboard() {
           <p className={styles.sub}>{t("dashboard.subtitle")}</p>
         </header>
 
+        {health && (
+          <div className={styles.healthBar}>
+            <span className={styles.healthTitle}>System Status:</span>
+            <span className={`${styles.healthDot} ${health.status === "healthy" ? styles.healthGreen : styles.healthRed}`} />
+            <span className={styles.healthLabel}>{health.status.toUpperCase()}</span>
+            <span className={styles.healthDivider}>|</span>
+            <span className={styles.healthDetail}>
+              Database: <span className={health.database?.connected ? styles.textGreen : styles.textRed}>●</span>
+              &nbsp;Knowledge Base: <span className={health.integrations?.qdrant?.connected ? styles.textGreen : styles.textRed}>●</span>
+              &nbsp;AI Diagnostics: <span className={health.integrations?.llm?.connected ? styles.textGreen : styles.textRed}>●</span>
+              &nbsp;WhatsApp Gateway: <span className={health.integrations?.twilio_whatsapp?.connected ? styles.textGreen : styles.textRed}>●</span>
+              &nbsp;Telemetry Feed: <span className={health.integrations?.mqtt_broker?.connected ? styles.textGreen : styles.textRed}>●</span>
+            </span>
+          </div>
+        )}
+
         {errored && <div className="dashboardError">{t("dashboard.load_error")}</div>}
 
         <section className={styles.tiles}>
@@ -757,7 +808,7 @@ export default function Dashboard() {
             <tbody>
               {loading ? (
                 <>
-                  {[1,2,3].map((r) => (
+                  {[1, 2, 3].map((r) => (
                     <tr key={r}>
                       <td><Skeleton width={90} height={16} /></td>
                       <td><Skeleton width={120} height={16} /></td>
@@ -827,7 +878,7 @@ export default function Dashboard() {
             <tbody>
               {loading ? (
                 <>
-                  {[1,2,3].map((r) => (
+                  {[1, 2, 3].map((r) => (
                     <tr key={r}>
                       <td><Skeleton width={90} height={16} /></td>
                       <td><Skeleton width={120} height={16} /></td>

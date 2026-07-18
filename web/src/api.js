@@ -42,3 +42,5 @@ export const recordOutcome = (id, body) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+
+export const getHealth = () => j("/health").catch(() => null);

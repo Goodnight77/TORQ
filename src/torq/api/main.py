@@ -18,12 +18,17 @@ from torq.events import listener
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    import asyncio
+    from torq.events import live
+    live.loop = asyncio.get_running_loop()
+
     models.init_db()
     mqtt_client = None
     if settings.enable_fallbacks:
         print("[MQTT] fallbacks enabled, skipping broker connection")
     else:
         mqtt_client = listener.build_client()
+        live.mqtt_client = mqtt_client
         try:
             mqtt_client.connect(
                 settings.mqtt_broker_url,
@@ -35,11 +40,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         except Exception as exc:
             print(f"[MQTT] broker unreachable ({exc}), continuing without live feed")
             mqtt_client = None
+            live.mqtt_client = None
     yield
     if mqtt_client:
         mqtt_client.loop_stop()
         mqtt_client.disconnect()
         print("[MQTT] listener stopped")
+    live.mqtt_client = None
 
 
 app = FastAPI(title="TORQ - Fault-to-Fix Engine", lifespan=lifespan)
