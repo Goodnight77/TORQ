@@ -59,7 +59,7 @@
   font-size: 14px;
   color: var(--text-muted);
   line-height: 1.7;
-  padding-right: 48px;
+  padding-inline-end: 48px;
   transition: color 0.35s;
 }
 

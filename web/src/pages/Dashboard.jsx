@@ -494,7 +494,7 @@ function Drawer({ workOrder, onClose, onNotify, busy, t }) {
 
 function StatusFilter({ value, onChange, t }) {
   return (
-    <select className={styles.filterSelect} value={value} onChange={(e) => onChange(e.target.value)}>
+    <select className={styles.filterSelect} value={value} onChange={(e) => onChange(e.target.value)} aria-label="Filter by status">
       <option value="">{t("dashboard.all_statuses")}</option>
       <option value="pending">{t("dashboard.pending")}</option>
       <option value="dispatched">{t("dashboard.dispatched")}</option>
@@ -776,6 +776,7 @@ export default function Dashboard() {
             className={styles.searchInput}
             type="text"
             placeholder={t("dashboard.search")}
+            aria-label={t("dashboard.search")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
