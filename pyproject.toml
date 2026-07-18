@@ -16,6 +16,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "pydantic-settings>=2.14.2",
     "qdrant-client[fastembed]>=1.18.0",
+    "twilio>=9.10.9",
     "uharfbuzz>=0.55.0",
     "uvicorn>=0.51.0",
 ]
