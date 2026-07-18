@@ -1,7 +1,11 @@
-"""Diagnosis agent: retrieve manual + history context, call the LLM, return a Diagnosis.
+"""Diagnosis agent: retrieve manual + history context, reason, return a Diagnosis.
+
+The agent runs a multi-step reason/act loop: it searches manuals, then repair
+history, and may search again with a refined query before answering. If the
+agent loop fails for any reason it falls back to a single-shot diagnosis.
 
 Retrieval goes through the MCP knowledge server (proving plant data stays
-on-premise).  If the MCP server is unreachable the agent falls back to
+on-premise).  If the MCP server is unreachable retrieval falls back to
 calling ``ingest.search`` directly.
 """
 
@@ -10,7 +14,12 @@ import logging
 
 from openai import OpenAI
 
-from torq.agent.prompts import SYSTEM, build_user_prompt
+from torq.agent.prompts import (
+    REACT_SYSTEM,
+    SYSTEM,
+    build_react_task,
+    build_user_prompt,
+)
 from torq.agent.schemas import Diagnosis
 from torq.config import settings
 from torq.ingest import search  # direct fallback
@@ -130,17 +139,67 @@ def _chat(client: OpenAI, messages: list[dict], json_mode: bool = True):
     return client.chat.completions.create(model=settings.llm_model, messages=messages, stream=False)
 
 
-# ── main entry point ─────────────────────────────────────────────────────────
+def _merge_sources(data: dict, extra: list[str]) -> None:
+    """Add retrieved source ids to data['sources'] without duplicates."""
+    data.setdefault("sources", [])
+    for s in extra:
+        if s and s not in data["sources"]:
+            data["sources"].append(s)
 
 
-def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis:
+# ── multi-step (ReAct) agent ─────────────────────────────────────────────────
+
+
+def _diagnose_react(fault_code: str, machine: str, context: str) -> Diagnosis:
+    """Reason/act loop: the LLM decides when to search manuals/history vs answer."""
+    # Imported lazily so a missing/broken langgraph install degrades to one-shot.
+    # create_react_agent is deprecated for removal in langgraph v2; swap to
+    # langchain.agents.create_agent (adds the langchain package) when upgrading.
+    from langchain_core.tools import tool
+    from langchain_openai import ChatOpenAI
+    from langgraph.prebuilt import create_react_agent
+
+    collected: list[str] = []  # source ids surfaced by tool calls this run
+
+    @tool
+    def search_manuals(query: str) -> str:
+        """Search the plant's OEM manuals for excerpts relevant to a fault or symptom."""
+        txt, src = _join_manuals(_fetch_manuals(query))
+        collected.extend(src)
+        return txt or "no manual excerpts found"
+
+    @tool
+    def search_history(query: str) -> str:
+        """Search past repair records for fixes to similar faults."""
+        txt, src = _join_history(_fetch_history(query, machine=machine))
+        collected.extend(src)
+        return txt or "no past repairs found"
+
+    model = ChatOpenAI(
+        model=settings.agent_model,
+        api_key=settings.llm_api_key,
+        base_url=settings.llm_base_url,
+        temperature=0,
+    )
+    agent = create_react_agent(model, [search_manuals, search_history], prompt=REACT_SYSTEM)
+    result = agent.invoke(
+        {"messages": [("user", build_react_task(fault_code, machine, context))]},
+        {"recursion_limit": settings.agent_max_steps * 2},
+    )
+    data = _parse_json(result["messages"][-1].content)
+    _merge_sources(data, collected)
+    return Diagnosis(fault_code=fault_code, machine=machine, **data)
+
+
+# ── single-shot fallback ─────────────────────────────────────────────────────
+
+
+def _diagnose_oneshot(fault_code: str, machine: str, context: str) -> Diagnosis:
+    """One retrieval pass then one LLM call. Used when the agent loop fails."""
     query = f"{fault_code} {machine} {context}".strip()
 
-    manuals_hits = _fetch_manuals(query)
-    manuals_txt, m_src = _join_manuals(manuals_hits)
-
-    history_hits = _fetch_history(query, machine=machine)
-    history_txt, h_src = _join_history(history_hits)
+    manuals_txt, m_src = _join_manuals(_fetch_manuals(query))
+    history_txt, h_src = _join_history(_fetch_history(query, machine=machine))
 
     client = OpenAI(api_key=settings.llm_api_key, base_url=settings.llm_base_url)
     messages = [
@@ -156,10 +215,17 @@ def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis
         resp = _chat(client, messages)
         data = _parse_json(resp.choices[0].message.content)
 
-    # Prefer retrieved sources; let the model add any it names.
-    data.setdefault("sources", [])
-    for s in m_src + h_src:
-        if s not in data["sources"]:
-            data["sources"].append(s)
-
+    _merge_sources(data, m_src + h_src)
     return Diagnosis(fault_code=fault_code, machine=machine, **data)
+
+
+# ── main entry point ─────────────────────────────────────────────────────────
+
+
+def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis:
+    """Multi-step agentic diagnosis, falling back to a single-shot pass on failure."""
+    try:
+        return _diagnose_react(fault_code, machine, context)
+    except Exception:  # noqa: BLE001 - any agent failure degrades to one-shot
+        log.warning("ReAct diagnosis failed, falling back to single-shot", exc_info=True)
+        return _diagnose_oneshot(fault_code, machine, context)
