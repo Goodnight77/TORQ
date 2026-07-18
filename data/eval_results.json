@@ -1,24 +1,45 @@
 {
-  "metric": "manual retrieval",
-  "scenarios": 10,
+  "k": 3,
   "configs": [
     {
-      "config": "A dense-only",
-      "hit_at_3": 1.0,
-      "hit_at_5": 1.0,
-      "mrr": 1.0
+      "recall@1": 0.909,
+      "recall@3": 1.0,
+      "mrr": 0.947,
+      "n": 22,
+      "id_recall@1": 0.714,
+      "id_mrr": 0.833,
+      "id_n": 7,
+      "name": "dense"
     },
     {
-      "config": "B hybrid",
-      "hit_at_3": 1.0,
-      "hit_at_5": 1.0,
-      "mrr": 0.95
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "mrr": 1.0,
+      "n": 22,
+      "id_recall@1": 1.0,
+      "id_mrr": 1.0,
+      "id_n": 7,
+      "name": "hybrid"
     },
     {
-      "config": "C hybrid+rerank",
-      "hit_at_3": 1.0,
-      "hit_at_5": 1.0,
-      "mrr": 0.95
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "mrr": 1.0,
+      "n": 22,
+      "id_recall@1": 1.0,
+      "id_mrr": 1.0,
+      "id_n": 7,
+      "name": "hybrid+rerank"
+    },
+    {
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "mrr": 1.0,
+      "n": 22,
+      "id_recall@1": 1.0,
+      "id_mrr": 1.0,
+      "id_n": 7,
+      "name": "hybrid+rerank+boost"
     }
   ]
 }

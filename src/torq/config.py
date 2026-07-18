@@ -101,6 +101,23 @@ class Settings(BaseSettings):
     use_hybrid: bool = True  # dense + BM25 sparse fused with RRF
     use_rerank: bool = True  # cross-encoder rerank of fused candidates
 
+    # Composite ranking: nudge recent, proven fixes up. Applied client-side after
+    # retrieval so it works in local mode too (a server >= v1.14 could do this in
+    # a FormulaQuery/gauss_decay instead). Only affects docs that carry `date`.
+    use_recency_boost: bool = True
+    recency_half_life_days: int = 180
+    recency_weight: float = 0.15  # weight on recency vs normalized semantic score
+    outcome_weight: float = 0.10  # bonus for a "resolved" record
+
+    # Dedup-on-write: instead of adding a near-identical repair as a new point,
+    # merge it into the existing one (bump a counter, refresh timestamp). Keeps the
+    # history collection from bloating with the same recurring fault.
+    use_dedup: bool = True
+    dedup_threshold: float = 0.90  # cosine similarity above which two repairs merge
+
+    # Retrieval-eval golden set (query -> expected fault_code/machine)
+    golden_file: Path = ROOT / "data" / "eval" / "golden.json"
+
     # MCP knowledge server (agent connects over stdio).
     # use_mcp needs a networked Qdrant (qdrant_url): the embedded on-disk store is
     # single-process, so the server subprocess cannot open it while the parent holds

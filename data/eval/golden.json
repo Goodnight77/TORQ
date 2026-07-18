@@ -1,0 +1,26 @@
+[
+  {"query": "motor keeps tripping on overtemperature after running for hours in summer heat on line 2", "machine": "CM-350 Line 2", "fault_code": "E-471"},
+  {"query": "overcurrent right at startup, drive would not ramp up, bearing seized on line 1", "machine": "CM-350 Line 1", "fault_code": "E-201", "expected_id": "R-0977"},
+  {"query": "packaging film keeps jamming during feed, roller slipping every few cycles", "machine": "PK-9 Line 3", "fault_code": "J-108", "expected_id": "R-1105"},
+  {"query": "chiller losing efficiency, supply temp creeping up, condenser water flow looks off", "machine": "Chiller 6", "fault_code": "C-207", "expected_id": "R-2001"},
+  {"query": "compressor overheating and tripping on a hot afternoon, power draw high", "machine": "Chiller 6", "fault_code": "C-101", "expected_id": "R-2002"},
+  {"query": "pump high vibration alarm, bearing noise on the drive end", "machine": "Pump 3", "fault_code": "P-410"},
+  {"query": "steady drip from the pump shaft seal during operation", "machine": "Pump 3", "fault_code": "P-305"},
+  {"query": "air handler filter differential pressure too high, supply airflow dropped", "machine": "AHU 2", "fault_code": "A-120"},
+  {"query": "supply air stuck too warm even though cooling is calling for it", "machine": "AHU 2", "fault_code": "A-315"},
+  {"query": "pump cavitation, low suction pressure, likely blocked suction strainer", "machine": "Pump 3", "fault_code": "P-260"},
+
+  {"query": "cleaned SB-6 strainer basket and brush-cleaned the tubes", "machine": "Chiller 6", "fault_code": "C-207", "hard": "keyword"},
+  {"query": "swapped the ACT-2 actuator, it would not stroke open", "machine": "AHU 2", "fault_code": "A-315", "hard": "keyword"},
+  {"query": "fitted MS-3 seal cartridge and SS-3 shaft sleeve", "machine": "Pump 3", "fault_code": "P-305", "hard": "keyword"},
+  {"query": "replaced FLT-13 set and reseated the cells against the gaskets", "machine": "AHU 2", "fault_code": "A-120", "hard": "keyword"},
+  {"query": "put in RLR-9 and reset the nip to 3.5 bar", "machine": "PK-9 Line 3", "fault_code": "J-108", "hard": "keyword"},
+  {"query": "BRG-6205 drive-end bearing spalled on the pump, BPFO peaks in the spectrum", "machine": "Pump 3", "fault_code": "P-410", "hard": "ambiguous-bearing"},
+  {"query": "BRG-6205 drive-end bearing seized after coolant ingress through the cable gland on the motor", "machine": "CM-350 Line 1", "fault_code": "E-201", "hard": "ambiguous-bearing"},
+  {"query": "hot afternoon overheating trip, high power draw, on the chiller compressor", "machine": "Chiller 6", "fault_code": "C-101", "hard": "cross-fault-overheat"},
+  {"query": "hot day overtemp trip, cooling airflow starved by lint on the drive motor", "machine": "CM-350 Line 2", "fault_code": "E-471", "hard": "cross-fault-overheat"},
+  {"query": "replaced AF-12 filter mat after intake louvers clogged with lint", "machine": "CM-350 Line 2", "fault_code": "E-471", "hard": "keyword", "expected_id": "R-1042"},
+
+  {"query": "SB-6", "machine": "Chiller 6", "fault_code": "C-207", "hard": "part-number", "expected_id": "R-2001"},
+  {"query": "ACT-2", "machine": "AHU 2", "fault_code": "A-315", "hard": "part-number", "expected_id": "R-2006"}
+]

@@ -30,10 +30,37 @@ def ingest_history(history_file: Path | None = None) -> int:
 
 
 def upsert_history_record(record: dict) -> None:
-    """Index a single repair record."""
-    from torq.ingest import upsert_document
+    """Index a single repair record.
+
+    Dedup-on-write: if a near-identical repair for the same machine + fault code
+    already exists, merge into it (bump `times_seen`, refresh `updated_at`) instead
+    of adding another near-duplicate point. A record re-indexing under its own id
+    still updates in place (handled by upsert_document's stable id)."""
+    from datetime import datetime, timezone
+
+    from torq.ingest import _point_id, merge_payload, nearest_dense, upsert_document
+
     doc = _record_to_text(record)
     doc_id = record.get("id") or "WO-unknown"
+
+    if settings.use_dedup:
+        hit = nearest_dense(
+            settings.history_collection,
+            doc,
+            {"machine": record.get("machine"), "fault_code": record.get("fault_code")},
+        )
+        if hit and hit[1] >= settings.dedup_threshold and str(hit[0]) != str(_point_id(doc_id)):
+            pid, _score, payload = hit
+            merge_payload(
+                settings.history_collection,
+                pid,
+                {
+                    "times_seen": int(payload.get("times_seen", 1)) + 1,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+            return
+
     upsert_document(settings.history_collection, doc_id, doc, record)
 
 

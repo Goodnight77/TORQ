@@ -6,6 +6,7 @@ fused with RRF), optionally reranked with a cross-encoder, and can be filtered b
 payload fields (machine, fault_code).
 """
 
+import math
 import uuid
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -33,7 +34,10 @@ _PAYLOAD_INDEXES = {
 def get_client() -> QdrantClient:
     """Cached Qdrant client. Falls back to on-disk storage if no URL is set."""
     if settings.qdrant_url:
-        return QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key)
+        # Generous timeout: cloud round-trips under load can exceed the short default.
+        return QdrantClient(
+            url=settings.qdrant_url, api_key=settings.qdrant_api_key, timeout=30
+        )
     # no cloud URL -> local on-disk store, keeps retrieval self-contained
     return QdrantClient(path=str(settings.manuals_dir.parent / "qdrant_storage"))
 
@@ -171,13 +175,83 @@ def upsert_document(collection: str, doc_id: str | int, doc: str, payload: dict)
     )
 
 
+def nearest_dense(
+    collection: str, query: str, filters: dict | None = None
+) -> tuple[str | int, float, dict] | None:
+    """(point_id, cosine_score, payload) of the single nearest dense neighbour,
+    or None if the collection is missing/empty. Used for dedup-on-write."""
+    client = get_client()
+    if not client.collection_exists(collection):
+        return None
+    res = client.query_points(
+        collection_name=collection,
+        query=embed([query])[0],
+        using="dense",
+        query_filter=_filter(filters),
+        limit=1,
+        with_payload=True,
+    )
+    if not res.points:
+        return None
+    p = res.points[0]
+    return p.id, float(p.score), p.payload
+
+
+def merge_payload(collection: str, point_id: str | int, updates: dict) -> None:
+    """Merge extra fields into an existing point's payload, leaving its vector be."""
+    get_client().set_payload(collection_name=collection, payload=updates, points=[point_id])
+
+
+def _recency(date_str: str | None, now: datetime) -> float:
+    """Gaussian decay in [0, 1] on a record's age: 1.0 today, ~0.6 at one
+    half-life, tapering toward 0 for old records. Unparseable/absent -> 0."""
+    if not date_str:
+        return 0.0
+    s = str(date_str)
+    try:
+        d = datetime.fromisoformat(s)
+    except ValueError:
+        try:
+            d = datetime.strptime(s[:10], "%Y-%m-%d")
+        except ValueError:
+            return 0.0
+    if d.tzinfo is None:
+        d = d.replace(tzinfo=timezone.utc)
+    age_days = max((now - d).total_seconds() / 86400.0, 0.0)
+    hl = max(settings.recency_half_life_days, 1)
+    return math.exp(-0.5 * (age_days / hl) ** 2)
+
+
+def _boost(scored: list[tuple]) -> list[tuple]:
+    """Composite reorder: normalized base score + recency + resolved-outcome bonus.
+
+    Kept client-side so it works against the embedded local store; a Qdrant server
+    (>= v1.14) could push this into a FormulaQuery with gauss_decay for speed at
+    scale. Semantic similarity stays the dominant signal; recency/outcome only
+    break near-ties toward fresher, proven fixes.
+    """
+    vals = [s for _, s in scored]
+    lo, hi = min(vals), max(vals)
+    span = (hi - lo) or 1.0
+    now = datetime.now(timezone.utc)
+    out = []
+    for pt, s in scored:
+        base = (s - lo) / span
+        rec = _recency(pt.payload.get("date"), now)
+        won = 1.0 if pt.payload.get("outcome") == "resolved" else 0.0
+        out.append((pt, base + settings.recency_weight * rec + settings.outcome_weight * won))
+    out.sort(key=lambda x: x[1], reverse=True)
+    return out
+
+
 def search(
     collection: str,
     query: str,
     limit: int | None = None,
     filters: dict | None = None,
 ) -> list[dict]:
-    """Hybrid (dense + BM25, RRF) retrieval with optional rerank and payload filter."""
+    """Hybrid (dense + BM25, RRF) retrieval with optional rerank, recency/outcome
+    boost, and payload filter."""
     client = get_client()
     if not client.collection_exists(collection):
         return []
@@ -207,10 +281,18 @@ def search(
             with_payload=True,
         )
 
-    payloads = [pt.payload for pt in res.points]
-    if settings.use_rerank and payloads:
-        docs = [p.get("document", "") for p in payloads]
-        scores = list(get_reranker().rerank(query, docs))
-        order = sorted(range(len(payloads)), key=lambda i: scores[i], reverse=True)
-        payloads = [payloads[i] for i in order]
-    return payloads[:k]
+    points = list(res.points)
+    if not points:
+        return []
+    if settings.use_rerank:
+        docs = [pt.payload.get("document", "") for pt in points]
+        rr = list(get_reranker().rerank(query, docs))
+        scored = [(pt, float(s)) for pt, s in zip(points, rr)]
+    else:
+        scored = [(pt, float(pt.score)) for pt in points]
+
+    if settings.use_recency_boost and any("date" in pt.payload for pt, _ in scored):
+        scored = _boost(scored)
+    else:
+        scored.sort(key=lambda x: x[1], reverse=True)
+    return [pt.payload for pt, _ in scored[:k]]
