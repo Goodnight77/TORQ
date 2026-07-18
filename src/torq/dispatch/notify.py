@@ -4,10 +4,22 @@ from torq.agent.schemas import WorkOrder
 from torq.config import settings
 
 
+_GREETING = {
+    "en": "Work order for {name}:",
+    "fr": "Ordre de travail pour {name} :",
+    "ar": "أمر عمل لـ {name}:",
+}
+
+
 def _message_for(wo: WorkOrder, tech: dict) -> str:
-    """Pick the work-order text in the technician's language (fallback to English)."""
+    """Work-order text in the technician's language, with a personalized greeting."""
     lang = tech.get("lang", "en")
-    return wo.content.get(lang) or wo.content.get("en") or wo.root_cause
+    text = wo.content.get(lang) or wo.content.get("en") or wo.root_cause
+    name = tech.get("name", "")
+    if name:
+        greeting = _GREETING.get(lang, _GREETING["en"]).format(name=name)
+        return f"{greeting}\n\n{text}"
+    return text
 
 
 def send_whatsapp(to: str, body: str) -> dict:
