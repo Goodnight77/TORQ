@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     sparse_model: str = "Qdrant/bm25"
     rerank_model: str = "Xenova/ms-marco-MiniLM-L-6-v2"
 
+    # Chunking (chonkie markdown-aware; keeps each fault-code section whole)
+    manual_chunk_size: int = 1800
+
     # Retrieval
     top_k: int = 4
     use_hybrid: bool = True  # dense + BM25 sparse fused with RRF

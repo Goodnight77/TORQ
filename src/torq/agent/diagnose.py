@@ -46,6 +46,21 @@ def _parse_json(text: str) -> dict:
         raise
 
 
+def _chat(client: OpenAI, messages: list[dict], json_mode: bool = True):
+    """Chat call requesting a JSON object; falls back if the model rejects the format."""
+    if json_mode:
+        try:
+            return client.chat.completions.create(
+                model=settings.llm_model,
+                messages=messages,
+                response_format={"type": "json_object"},
+                stream=False,
+            )
+        except Exception:  # noqa: BLE001 - model may not support json mode; plain call
+            pass
+    return client.chat.completions.create(model=settings.llm_model, messages=messages, stream=False)
+
+
 def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis:
     query = f"{fault_code} {machine} {context}".strip()
     manuals_txt, m_src = _join_manuals(search(settings.manuals_collection, query))
@@ -56,20 +71,18 @@ def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis
     history_txt, h_src = _join_history(hist)
 
     client = OpenAI(api_key=settings.llm_api_key, base_url=settings.llm_base_url)
-    resp = client.chat.completions.create(
-        model=settings.llm_model,
-        messages=[
-            {"role": "system", "content": SYSTEM},
-            {
-                "role": "user",
-                "content": build_user_prompt(
-                    fault_code, machine, context, manuals_txt, history_txt
-                ),
-            },
-        ],
-        stream=False,
-    )
-    data = _parse_json(resp.choices[0].message.content)
+    messages = [
+        {"role": "system", "content": SYSTEM},
+        {"role": "user", "content": build_user_prompt(fault_code, machine, context, manuals_txt, history_txt)},
+    ]
+    resp = _chat(client, messages)
+    try:
+        data = _parse_json(resp.choices[0].message.content)
+    except (json.JSONDecodeError, ValueError):
+        # one retry with a stricter nudge for valid JSON
+        messages.append({"role": "user", "content": "Return ONLY the JSON object, no prose or fences."})
+        resp = _chat(client, messages)
+        data = _parse_json(resp.choices[0].message.content)
 
     # Prefer retrieved sources; let the model add any it names.
     data.setdefault("sources", [])

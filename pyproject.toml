@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "TORQ - Fault-to-Fix Engine: autonomous machine diagnosis and repair dispatch."
 requires-python = ">=3.11"
 dependencies = [
+    "chonkie>=1.7.0",
     "fastapi>=0.139.2",
     "fpdf2>=2.8.7",
     "mcp>=1.28.1",
