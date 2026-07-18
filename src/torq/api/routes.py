@@ -17,6 +17,12 @@ from torq.workorder.pdf import render_pdf
 router = APIRouter()
 
 
+class MachineIn(BaseModel):
+    id: str
+    model: str
+    location: str
+
+
 class FaultIn(BaseModel):
     fault_code: str
     machine: str = ""
@@ -29,6 +35,31 @@ class OutcomeIn(BaseModel):
     actual_fix: str = ""
     notes: str = ""
     time_to_fix_min: float | None = None
+
+
+@router.get("/machines")
+def machines():
+    return models.list_machines()
+
+
+@router.get("/machines/{machine_id}")
+def machine(machine_id: str):
+    registered = models.get_machine(machine_id)
+    if not registered:
+        raise HTTPException(404, "machine not found")
+    return registered
+
+
+@router.post("/machines", status_code=201)
+def create_machine(machine: MachineIn):
+    machine_id = machine.id.strip()
+    model = machine.model.strip()
+    location = machine.location.strip()
+    if not machine_id or not model or not location:
+        raise HTTPException(422, "id, model, and location are required")
+    if not models.create_machine(machine_id, model, location):
+        raise HTTPException(409, "machine already exists")
+    return models.get_machine(machine_id)
 
 
 @router.post("/faults")
