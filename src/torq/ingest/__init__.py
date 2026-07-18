@@ -19,7 +19,7 @@ def get_client() -> QdrantClient:
     """Cached Qdrant client. Falls back to on-disk storage if no URL is set."""
     if settings.qdrant_url:
         return QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key)
-    # ponytail: no cloud URL -> local on-disk store, keeps the demo self-contained
+    # no cloud URL -> local on-disk store, keeps retrieval self-contained
     return QdrantClient(path=str(settings.manuals_dir.parent / "qdrant_storage"))
 
 

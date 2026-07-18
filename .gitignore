@@ -38,6 +38,9 @@ data/confidential/
 # --- Qdrant local storage ---
 qdrant_storage/
 
+# --- Local SQLite store ---
+*.db
+
 # --- Local-only (not committed) ---
 docs/
 CLAUDE.md

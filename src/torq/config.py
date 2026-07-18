@@ -21,10 +21,19 @@ class Settings(BaseSettings):
     qdrant_url: str = ""
     qdrant_api_key: str = ""
 
+    # Twilio (WhatsApp/SMS dispatch). Empty -> in-app fallback.
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_whatsapp_from: str = ""
+
+    # Local work-order store (SQLite; swap to Postgres later)
+    db_path: Path = ROOT / "data" / "torq.db"
+
     # Data locations
     manuals_dir: Path = ROOT / "data" / "manuals"
     history_file: Path = ROOT / "data" / "history" / "repairs.json"
     scenarios_file: Path = ROOT / "data" / "scenarios" / "scenarios.json"
+    shifts_file: Path = ROOT / "data" / "shifts.json"
 
     # Collections
     manuals_collection: str = "torq_manuals"
