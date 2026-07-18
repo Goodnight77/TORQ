@@ -30,8 +30,8 @@ const features = [
   },
   {
     icon: <IconBroadcast />,
-    title: "Any Integration Path",
-    description: "Ingest faults via REST API, MQTT, edge gateway, or the dashboard form — no PLC required.",
+    title: "Works With Your Setup",
+    description: "Report faults from the dashboard, connect machines that send digital alerts, or bridge older equipment — no special hardware required.",
   },
 ];
 
@@ -40,6 +40,7 @@ const stats = [
   { value: "47", suffix: "s", label: "Avg time to diagnose" },
   { value: "1,240", suffix: "+", label: "Faults resolved" },
   { value: "12", suffix: "x", label: "Faster than manual triage" },
+  { value: "0", suffix: "", label: "Data leakage" },
 ];
 
 function useInView(threshold = 0.15) {
@@ -104,6 +105,7 @@ export default function LandingPage() {
   const [pipelineRef, pipelineVisible] = useInView(0.1);
   const [featuresRef, featuresVisible] = useInView(0.1);
   const [stepsRef, stepsVisible] = useInView(0.1);
+  const [problemsRef, problemsVisible] = useInView(0.1);
 
   return (
     <div className={styles.page}>
@@ -136,7 +138,28 @@ export default function LandingPage() {
         <div className={styles.heroCorner} />
       </section>
 
-      {/* ── Stats ── */}
+      <section className={styles.problemsSection} id="problems">
+        <div className={styles.problemsInner}>
+          <div className={styles.problemsLeft}>
+            <h2 className={styles.problemsHeadline}>The Hidden Cost of Legacy Downtime</h2>
+          </div>
+          <div className={styles.problemsRight} ref={problemsRef}>
+            <div className={`${styles.problemCard} ${styles.fadeUp} ${problemsVisible ? styles.fadeUpVisible : ""}`} style={{ transitionDelay: "0ms" }}>
+              <h3>Hours lost to manual searches</h3>
+              <p>Technicians waste hours digging though dusty, 500 page physical manuals or fragmented PDFs to translate a single PLC fault code.</p>
+            </div>
+            <div className={`${styles.problemCard} ${styles.fadeUp} ${problemsVisible ? styles.fadeUpVisible : ""}`} style={{ transitionDelay: "150ms" }}>
+              <h3>The tribal knowledge expiry</h3>
+              <p>Critical maintenance workarounds live only in the heads of senior engineers. When they retire or exit the plant floor, operational wisdom is permanently lost.</p>
+            </div>
+            <div className={`${styles.problemCard} ${styles.fadeUp} ${problemsVisible ? styles.fadeUpVisible : ""}`} style={{ transitionDelay: "300ms" }}>
+              <h3>Trilingual friction</h3>
+              <p>Mismatches between machine logs, manufacturer documentation, and technician field languages (English, French, Arabic) create costly communication bottlenecks.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className={styles.statsSection} ref={statsRef}>
         <div className={styles.statsInner}>
           {stats.map((s, i) => (
@@ -181,8 +204,8 @@ export default function LandingPage() {
             <div className={styles.step}>
               <span className={styles.stepNum}>1</span>
               <div className={styles.stepBody}>
-                <h3 className={styles.stepTitle}>Fault enters TORQ</h3>
-                <p className={styles.stepDesc}>A fault arrives via REST API, MQTT, edge gateway (Modbus/OPC-UA), or a manual dashboard entry. TORQ immediately begins diagnosis regardless of the source.</p>
+                <h3 className={styles.stepTitle}>A fault comes in</h3>
+                <p className={styles.stepDesc}>A technician reports it from the dashboard, a connected machine sends an alert, or a bridge picks it up from older controllers. TORQ starts immediately, no matter how the fault arrives.</p>
               </div>
             </div>
             <div className={styles.step}>

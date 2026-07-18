@@ -12,11 +12,11 @@ const items = [
   },
   {
     q: "What machines are supported?",
-    a: "Any machine. If your equipment has a PLC or SCADA, TORQ ingests faults via MQTT or an edge gateway (Modbus, OPC-UA). If your machines are fully analog, operators can submit faults directly through the dashboard form or the REST API from any connected device.",
+    a: "Any machine. If your equipment sends digital alerts, TORQ can pick them up. If your machines are fully offline, operators can submit faults directly through the dashboard form or from any connected device.",
   },
   {
     q: "How do I integrate TORQ with my plant?",
-    a: "Four paths: (1) POST faults directly to the REST API from any system (CMMS, ERP, custom script). (2) Publish MachineFaultEvent JSON to the configured MQTT topic. (3) Run the edge gateway (scripts/mqtt_gateway.py) on a Raspberry Pi to bridge Modbus or OPC-UA from legacy controllers. (4) Use the dashboard's manual fault form — no digital connectivity required.",
+    a: "Four ways: (1) Use the dashboard form to report a fault manually. (2) Send fault data from your existing maintenance or ERP system. (3) Connect machines that already produce digital fault signals. (4) Run a small bridge on a device like a Raspberry Pi to connect older controllers — no special hardware required.",
   },
   {
     q: "Is my data secure?",
