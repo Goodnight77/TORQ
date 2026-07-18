@@ -40,6 +40,56 @@ function EvalCard({ data }) {
   );
 }
 
+function SavingsCalculator({ metrics }) {
+  const [faults, setFaults] = useState(10);
+  const [cost, setCost] = useState(50);
+  const [baseline, setBaseline] = useState(60);
+
+  const torqDiagnosis = (metrics?.avg_time_to_diagnosis_sec || 0) / 60;
+  const torqFix = metrics?.avg_time_to_fix_min || 0;
+  const torqMttr = torqDiagnosis + torqFix;
+
+  const savedMinsPerFault = Math.max(0, baseline - torqMttr);
+  const savedHoursPerWeek = (savedMinsPerFault * faults) / 60;
+  const savedMoneyPerWeek = savedMinsPerFault * faults * cost;
+  const savedMoneyPerYear = savedMoneyPerWeek * 52;
+
+  return (
+    <div className="evalcard calc-card">
+      <div className="evalhead">ROI & Savings Calculator</div>
+      <div className="calc-grid">
+        <div className="calc-inputs">
+          <label>
+            <span>Faults / week</span>
+            <input type="number" value={faults} onChange={e => setFaults(Number(e.target.value))} />
+          </label>
+          <label>
+            <span>Downtime cost / min ($)</span>
+            <input type="number" value={cost} onChange={e => setCost(Number(e.target.value))} />
+          </label>
+          <label>
+            <span>Baseline MTTR (min)</span>
+            <input type="number" value={baseline} onChange={e => setBaseline(Number(e.target.value))} />
+          </label>
+        </div>
+        <div className="calc-outputs">
+          <div className="calc-res">
+            <small>Hours saved / week</small>
+            <b>{savedHoursPerWeek.toFixed(1)}h</b>
+          </div>
+          <div className="calc-res">
+            <small>Money saved / year</small>
+            <b className="money">${Math.round(savedMoneyPerYear).toLocaleString()}</b>
+          </div>
+          <div className="calc-note">
+            *based on TORQ avg MTTR of {torqMttr.toFixed(1)} mins
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [metrics, setMetrics] = useState(null);
   const [evalData, setEvalData] = useState(null);
@@ -116,7 +166,10 @@ export default function App() {
         <Tile label="Resolution rate" value={pct(metrics?.resolution_rate)} />
       </section>
 
-      <EvalCard data={evalData} />
+      <div className="dashboard-grid">
+        <EvalCard data={evalData} />
+        <SavingsCalculator metrics={metrics} />
+      </div>
 
       <button className="sim" disabled={busy} onClick={simulate}>
         Simulate fault (E-471, CM-350 Line 2)
