@@ -345,7 +345,6 @@ export default function Dashboard() {
   const [fpmData, setFpmData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -366,13 +365,11 @@ export default function Dashboard() {
       setEvalData(ev);
       setTrendData(trend);
       setFpmData(fpm);
-      setErr(null);
       setLoading(false);
     } catch (e) {
       setLoading(false);
-      setErr(t("dashboard.backend_err"));
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -387,7 +384,6 @@ export default function Dashboard() {
       if (toastMsg) toast(toastMsg, toastType);
       await load();
     } catch (e) {
-      setErr(String(e.message || e));
       toast(String(e.message || e), "error");
     } finally {
       setBusy(false);
@@ -440,8 +436,6 @@ export default function Dashboard() {
           <h1 className={styles.heading}>{t("dashboard.title")}</h1>
           <p className={styles.sub}>{t("dashboard.subtitle")}</p>
         </header>
-
-        {err && <div className={styles.err}>{err}</div>}
 
         <section className={styles.tiles}>
           {loading ? (

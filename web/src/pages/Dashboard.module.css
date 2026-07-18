@@ -34,17 +34,6 @@
   transition: color 0.35s;
 }
 
-.err {
-  background: rgba(248, 81, 73, 0.08);
-  color: #dc3545;
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin: 20px 0;
-  font-size: 14px;
-  line-height: 1.5;
-  border: 1px solid rgba(248, 81, 73, 0.2);
-}
-
 /* ── Tiles ── */
 
 .tiles {
