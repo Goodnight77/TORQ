@@ -208,7 +208,7 @@ function ActivityLog() {
     api.getRecentActivity().then((rows) => {
       if (alive && Array.isArray(rows)) setEntries(rows);
     });
-    const es = new EventSource("/api/events/activity/stream");
+    const es = new EventSource(api.BASE + "/events/activity/stream");
     es.addEventListener("activity", (ev) => {
       try {
         const e = JSON.parse(ev.data);

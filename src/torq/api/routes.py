@@ -63,7 +63,7 @@ def create_machine(machine: MachineIn):
     return models.get_machine(machine_id)
 
 
-@router.post("/faults")
+@router.post("/faults", status_code=201)
 def report_fault(f: FaultIn):
     """A machine fault arrives -> diagnose -> queue a work order for approval."""
     arrival = datetime.now(timezone.utc).isoformat()

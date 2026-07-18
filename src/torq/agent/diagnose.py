@@ -134,10 +134,11 @@ def _chat(client: OpenAI, messages: list[dict], json_mode: bool = True):
                 messages=messages,
                 response_format={"type": "json_object"},
                 stream=False,
+                timeout=60,
             )
         except Exception:  # noqa: BLE001 - model may not support json mode; plain call
             pass
-    return client.chat.completions.create(model=settings.llm_model, messages=messages, stream=False)
+    return client.chat.completions.create(model=settings.llm_model, messages=messages, stream=False, timeout=60)
 
 
 def _merge_sources(data: dict, extra: list[str]) -> None:

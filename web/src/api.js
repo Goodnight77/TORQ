@@ -1,9 +1,15 @@
-const BASE = import.meta.env.VITE_API_URL || "/api";
+export const BASE = import.meta.env.VITE_API_URL || "/api";
 
 async function j(path, opts) {
-  const res = await fetch(BASE + path, opts);
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.status === 204 ? null : res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(BASE + path, { ...opts, signal: controller.signal });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    return res.status === 204 ? null : res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export const getMetrics = () => j("/metrics");

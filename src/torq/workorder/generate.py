@@ -53,6 +53,7 @@ def _translate(en_text: str) -> dict[str, str]:
             {"role": "user", "content": en_text},
         ],
         stream=False,
+        timeout=30,
     )
     raw = resp.choices[0].message.content.strip()
     if raw.startswith("```"):
@@ -69,7 +70,7 @@ def build_work_order(
     if translate:
         content.update(_translate(en))
     return WorkOrder(
-        id=uuid.uuid4().hex[:8],
+        id=uuid.uuid4().hex,
         fault_code=diag.fault_code,
         machine=diag.machine,
         root_cause=diag.root_cause,

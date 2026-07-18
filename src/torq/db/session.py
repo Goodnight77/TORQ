@@ -90,4 +90,6 @@ def get_conn() -> sqlite3.Connection | _PostgresConnection:
 
     sqlite_connection = sqlite3.connect(settings.db_path)
     sqlite_connection.row_factory = sqlite3.Row
+    sqlite_connection.execute("PRAGMA journal_mode=WAL")
+    sqlite_connection.execute("PRAGMA busy_timeout=5000")
     return sqlite_connection

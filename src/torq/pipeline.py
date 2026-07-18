@@ -20,7 +20,6 @@ def handle_fault(
     """Fault event -> diagnosis -> work order -> queued for supervisor approval."""
     if fault_arrived_at is None:
         fault_arrived_at = datetime.now(timezone.utc).isoformat()
-    models.init_db()
     live.push_activity("fault_received", machine, fault_code)
     live.push_activity("diagnosing", machine, fault_code, detail="reading manuals + repair history")
     diag = diagnose(fault_code, machine, context)

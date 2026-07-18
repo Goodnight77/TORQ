@@ -1,35 +1,35 @@
 [
   {
     "name": "Mohamed Arbi Nsibi",
-    "phone": "+21629051246",
+    "phone": "+21600000001",
     "lang": "ar",
     "skills": ["electromechanical", "general"],
     "on_shift": true
   },
   {
     "name": "Adam Ridene",
-    "phone": "+21694420276",
+    "phone": "+21600000002",
     "lang": "fr",
     "skills": ["packaging", "general"],
     "on_shift": true
   },
   {
     "name": "Youcef",
-    "phone": "+21695905163",
+    "phone": "+21600000003",
     "lang": "fr",
     "skills": ["electromechanical", "packaging", "general"],
     "on_shift": true
   },
   {
     "name": "Aziz Sayadi",
-    "phone": "+21620000002",
+    "phone": "+21600000004",
     "lang": "fr",
     "skills": ["packaging", "general"],
     "on_shift": false
   },
   {
     "name": "Mahdi Bani",
-    "phone": "+21620000004",
+    "phone": "+21600000005",
     "lang": "en",
     "skills": ["general"],
     "on_shift": false
