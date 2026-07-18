@@ -172,7 +172,7 @@ export default function App() {
     <div className="app">
       <header>
         <h1>
-          TORQ <span>Fault-to-Fix</span>
+          <img src="/logos/inline_logo.svg" alt="TORQ" />
         </h1>
         <div className="sub">Supervisor and downtime dashboard</div>
       </header>
@@ -223,7 +223,7 @@ export default function App() {
               <td>{w.fault_code}</td>
               <td className="cause">{w.root_cause}</td>
               <td className="actions">
-                <button disabled={busy} onClick={() => act(() => api.approve(w.id))}>
+                <button className="approve" disabled={busy} onClick={() => act(() => api.approve(w.id))}>
                   Approve
                 </button>
                 <button className="r" disabled={busy} onClick={() => act(() => api.reject(w.id))}>
@@ -261,7 +261,7 @@ export default function App() {
               <td>{w.assigned_to || "-"}</td>
               <td>
                 {w.status === "dispatched" && (
-                  <button disabled={busy} onClick={() => act(() => api.recordOutcome(w.id, FIX))}>
+                  <button className="approve" disabled={busy} onClick={() => act(() => api.recordOutcome(w.id, FIX))}>
                     Mark fixed
                   </button>
                 )}
