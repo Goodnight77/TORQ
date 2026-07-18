@@ -1,12 +1,16 @@
 """HTTP endpoints: faults, work orders, approvals, outcomes, dashboard metrics."""
 
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from torq.db import models
 from torq.dispatch import approval
 from torq.knowledge import feedback
 from torq.pipeline import handle_fault
+from torq.workorder.pdf import render_pdf
 
 router = APIRouter()
 
@@ -42,6 +46,20 @@ def work_order(wo_id: str):
     if not wo:
         raise HTTPException(404, "work order not found")
     return wo
+
+
+@router.get("/work-orders/{wo_id}/pdf")
+def work_order_pdf(wo_id: str):
+    """Download the work-order PDF. Renders it on demand if not generated yet."""
+    wo = models.get(wo_id)
+    if not wo:
+        raise HTTPException(404, "work order not found")
+    path = Path(wo.pdf_path) if wo.pdf_path else None
+    if not path or not path.exists():
+        path = render_pdf(wo)
+        wo.pdf_path = str(path)
+        models.save(wo)
+    return FileResponse(path, media_type="application/pdf", filename=f"work_order_{wo.id}.pdf")
 
 
 @router.post("/work-orders/{wo_id}/approve")

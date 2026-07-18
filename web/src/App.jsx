@@ -182,6 +182,9 @@ export default function App() {
             <h3>
               {selected.machine} - {selected.fault_code}
             </h3>
+            <a className="pdf" href={`/api/work-orders/${selected.id}/pdf`} target="_blank" rel="noreferrer">
+              Download PDF (EN/FR/AR)
+            </a>
             <p className="cause">{selected.root_cause}</p>
             {selected.sources?.length > 0 && (
               <div className="sources">
