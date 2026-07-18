@@ -31,7 +31,7 @@ export default function Footer() {
           </div>
           <div className={styles.col}>
             <h4 className={styles.heading}>{t("footer.faq")}</h4>
-            <FAQ dark={true} />
+            <FAQ />
           </div>
         </div>
         <div className={styles.bottom}>

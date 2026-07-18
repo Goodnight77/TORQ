@@ -7,6 +7,8 @@
 [data-theme="dark"] .footer,
 :root:not([data-theme="light"]):not([data-theme="dark"]) .footer {
   color: #111111;
+  --text-primary: #111111;
+  --text-muted: rgba(0, 0, 0, 0.55);
 }
 
 [data-theme="dark"] .heading,
@@ -28,28 +30,6 @@
 :root:not([data-theme="light"]):not([data-theme="dark"]) .bottom {
   color: rgba(0, 0, 0, 0.4);
   border-top-color: rgba(0, 0, 0, 0.1);
-}
-
-/* FAQ inside footer — dark text on white brand bg */
-[data-theme="dark"] .footer .dark .question,
-:root:not([data-theme="light"]):not([data-theme="dark"]) .footer .dark .question {
-  color: #111111;
-}
-[data-theme="dark"] .footer .dark .answerInner,
-:root:not([data-theme="light"]):not([data-theme="dark"]) .footer .dark .answerInner {
-  color: rgba(0, 0, 0, 0.55);
-}
-[data-theme="dark"] .footer .dark .item,
-:root:not([data-theme="light"]):not([data-theme="dark"]) .footer .dark .item {
-  border-color: rgba(0, 0, 0, 0.1);
-}
-[data-theme="dark"] .footer .dark .chevron,
-:root:not([data-theme="light"]):not([data-theme="dark"]) .footer .dark .chevron {
-  color: rgba(0, 0, 0, 0.35);
-}
-[data-theme="dark"] .footer .dark .open .chevron,
-:root:not([data-theme="light"]):not([data-theme="dark"]) .footer .dark .open .chevron {
-  color: #111111;
 }
 
 .inner {
