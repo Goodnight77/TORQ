@@ -17,6 +17,22 @@ Machine ──▶ TORQ Agent ──▶ Work Order ──▶ Supervisor ──▶
    └───────────────────── outcome feedback ◀──────────────────┘
 ```
 
+## Data
+
+The knowledge base has two collections: OEM manuals (how to fix) and repair
+history (what worked before). Demo data comes from:
+
+- **Authored seed** - two machines (conveyor motor CM-350, packaging unit PK-9)
+  with fault-code manuals and a few past repairs.
+- **IBM AssetOpsBench-derived** - chiller, centrifugal pump, and air handling unit
+  manuals plus history, grounded in real AssetOpsBench asset profiles, work orders,
+  FMEA failure modes, and ISO-10816 vibration thresholds. Manual prose is
+  synthesized (AssetOpsBench ships structured data, not prose manuals).
+- **Self-improving loop** - resolved work orders are written back into the history
+  collection, so future diagnoses reuse past fixes.
+
+No proprietary or confidential documents are included.
+
 ## Quick start
 
 TORQ uses [uv](https://docs.astral.sh/uv/) for environment and dependency management.

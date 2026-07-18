@@ -1,0 +1,80 @@
+{
+  "metric": "diagnosis (LLM-as-judge)",
+  "scenarios": 10,
+  "pass_rate": 1.0,
+  "correct_rate": 1.0,
+  "grounded_rate": 1.0,
+  "avg_score": 0.99,
+  "results": [
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 1.0,
+      "reason": "The root cause directly addresses motor overtemperature due to cooling system blockage, matching the expected topic. The diagnosis cites specific relevant sources (conveyor_motor.md, past work orders) and uses plausible part numbers without inventing fake components.",
+      "scenario": "S1"
+    },
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 1.0,
+      "reason": "The root cause matches the expected topic of seized bearing, and the diagnosis cites relevant sources from conveyor_motor.md and a past repair record R-0977, with realistic parts and steps, no invented details.",
+      "scenario": "S2"
+    },
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 0.9,
+      "reason": "Root cause matches expected topic (film feed jam/roller nip/encoder) and repair steps are relevant. Sources include relevant packaging_unit.md and R-1105; the inclusion of centrifugal_pump.md is unrelated but does not invalidate grounding as no fake parts are invented.",
+      "scenario": "S3"
+    },
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 1.0,
+      "reason": "The root cause matches the expected topic (heater cartridge/thermocouple). The diagnosis cites relevant sources (packaging_unit.md) for the fault code and corrective procedure, and does not invent any fake parts or codes.",
+      "scenario": "S4"
+    },
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 1.0,
+      "reason": "The root cause correctly identifies recurring lint buildup as the overtemp cause, matching the expected topic of recurring overtemp/lint/prior fix reuse. The diagnosis cites relevant sources and lists plausible parts without inventing fake components or codes.",
+      "scenario": "S5"
+    },
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 1.0,
+      "reason": "Root cause matches expected topic exactly and all repair steps/parts are supported by cited sources.",
+      "scenario": "S6"
+    },
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 1.0,
+      "reason": "The root cause directly addresses compressor overheating due to heat rejection issues (condenser fouling/high return temp), matching the expected topic. All repair steps and parts are specific, non-fabricated, and supported by cited sources (OEM manual and past repairs). No fake codes or parts.",
+      "scenario": "S7"
+    },
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 1.0,
+      "reason": "Root cause matches expected topic of bearing wear and high vibration, with specific bearing fault frequencies and ISO standard. Diagnosis cites relevant sources (centrifugal_pump.md, past repair R-2003) and uses real part BRG-6205. No invented parts or codes; all repair steps are plausible and reference appropriate procedures.",
+      "scenario": "S8"
+    },
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 1.0,
+      "reason": "The diagnosis correctly identifies cavitation and impeller wear as the root cause, matching the expected topic. It cites relevant sources such as centrifugal_pump.md and past repairs, and provides plausible part numbers and repair steps without inventing fake codes or information.",
+      "scenario": "S9"
+    },
+    {
+      "correct": true,
+      "grounded": true,
+      "score": 1.0,
+      "reason": "The root cause directly addresses the expected topic of dirty filter/high differential pressure, and the diagnosis uses plausible part numbers and cites relevant sources without inventing any fake components or codes.",
+      "scenario": "S10"
+    }
+  ]
+}
