@@ -30,6 +30,80 @@ function Badge({ status }) {
   return <span className={`${styles.badge} ${styles[status] || ""}`}>{status}</span>;
 }
 
+// A work order is "open" until it reaches a terminal state.
+const OPEN_STATUS = new Set(["pending", "approved", "dispatched"]);
+const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString() : "-");
+
+function MachineDrawer({ machine, workOrders, downtime, onClose, onSelectWorkOrder }) {
+  if (!machine) return null;
+  const history = workOrders.filter((w) => w.machine === machine);
+  const open = history.filter((w) => OPEN_STATUS.has(w.status));
+  const model = downtime?.model || machine;
+  const location = downtime?.location;
+
+  return (
+    <div className={styles.drawer} onClick={onClose}>
+      <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
+        <button className={styles.closeBtn} onClick={onClose}>close</button>
+        <h3 className={styles.panelTitle}>{machine}</h3>
+        <p className={styles.sub}>{model}{location ? ` - ${location}` : ""}</p>
+
+        <section className={styles.tiles} style={{ margin: "16px 0" }}>
+          <Tile label="Total downtime" value={`${downtime?.downtime_min ?? 0} min`} />
+          <Tile label="Work orders" value={history.length} />
+          <Tile label="Open faults" value={open.length} />
+        </section>
+
+        <div className={styles.langLabel}>Open faults</div>
+        {open.length === 0 ? (
+          <p className={styles.muted}>None open.</p>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr><th>ID</th><th>Fault</th><th>Status</th><th>Root cause</th></tr>
+              </thead>
+              <tbody>
+                {open.map((w) => (
+                  <tr key={w.id}>
+                    <td><a className={styles.link} onClick={() => onSelectWorkOrder(w)}>{w.id}</a></td>
+                    <td>{w.fault_code}</td>
+                    <td><Badge status={w.status} /></td>
+                    <td className={styles.cause}>{w.root_cause}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className={styles.langLabel} style={{ marginTop: 24 }}>Work-order history</div>
+        {history.length === 0 ? (
+          <p className={styles.muted}>No work orders for this machine.</p>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr><th>ID</th><th>Fault</th><th>Status</th><th>Created</th></tr>
+              </thead>
+              <tbody>
+                {history.map((w) => (
+                  <tr key={w.id}>
+                    <td><a className={styles.link} onClick={() => onSelectWorkOrder(w)}>{w.id}</a></td>
+                    <td>{w.fault_code}</td>
+                    <td><Badge status={w.status} /></td>
+                    <td className={styles.muted}>{fmtDate(w.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ConfidenceBadge({ confidence }) {
   if (confidence == null) return null;
   const low = confidence < CONFIDENCE_THRESHOLD;
@@ -353,6 +427,7 @@ export default function Dashboard() {
   const [trendData, setTrendData] = useState(null);
   const [fpmData, setFpmData] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [machineDetail, setMachineDetail] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
@@ -517,7 +592,7 @@ export default function Dashboard() {
                 pending.map((w) => (
                   <tr key={w.id}>
                     <td><a className={styles.link} onClick={() => setSelected(w)}>{w.id}</a></td>
-                    <td>{w.machine}</td>
+                    <td>{w.machine ? <a className={styles.link} onClick={() => setMachineDetail(w.machine)}>{w.machine}</a> : "-"}</td>
                     <td>{w.fault_code} <ConfidenceBadge confidence={w.confidence} /></td>
                     <td className={styles.cause}>{w.root_cause}</td>
                     <td className={styles.actions}>
@@ -567,7 +642,7 @@ export default function Dashboard() {
                 filteredAll.map((w) => (
                   <tr key={w.id}>
                     <td><a className={styles.link} onClick={() => setSelected(w)}>{w.id}</a></td>
-                    <td>{w.machine}</td>
+                    <td>{w.machine ? <a className={styles.link} onClick={() => setMachineDetail(w.machine)}>{w.machine}</a> : "-"}</td>
                     <td>{w.fault_code}</td>
                     <td><Badge status={w.status} /></td>
                     <td>{w.assigned_to || "-"}</td>
@@ -586,6 +661,17 @@ export default function Dashboard() {
         </div>
 
         <Drawer workOrder={selected} onClose={() => setSelected(null)} />
+
+        <MachineDrawer
+          machine={machineDetail}
+          workOrders={all}
+          downtime={metrics?.machine_downtime?.find((m) => m.machine_id === machineDetail)}
+          onClose={() => setMachineDetail(null)}
+          onSelectWorkOrder={(w) => {
+            setMachineDetail(null);
+            setSelected(w);
+          }}
+        />
 
         <p className={styles.footer}>{t("dashboard.footer")}</p>
       </div>
