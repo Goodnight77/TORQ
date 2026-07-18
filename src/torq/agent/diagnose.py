@@ -7,6 +7,7 @@ calling ``ingest.search`` directly.
 
 import json
 import logging
+import time
 
 from openai import OpenAI
 
@@ -130,10 +131,27 @@ def _chat(client: OpenAI, messages: list[dict], json_mode: bool = True):
     return client.chat.completions.create(model=settings.llm_model, messages=messages, stream=False)
 
 
+# ── diagnosis cache ──────────────────────────────────────────────────────────
+
+# Recent diagnoses keyed by (machine, fault_code). A repeat fault within the TTL
+# reuses the cached result and skips the retrieval + LLM round-trip. No lock: a
+# rare race just costs a redundant diagnosis, it never corrupts state. Copies go
+# in and out so a caller mutating a Diagnosis cannot poison the cache.
+_CACHE: dict[tuple[str, str], tuple[float, Diagnosis]] = {}
+
+
 # ── main entry point ─────────────────────────────────────────────────────────
 
 
 def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis:
+    key = (machine, fault_code)
+    ttl = settings.diagnose_cache_ttl
+    if ttl > 0:
+        hit = _CACHE.get(key)
+        if hit and time.monotonic() < hit[0]:
+            log.info("Diagnosis cache hit for %s %s (reused, no LLM call)", machine, fault_code)
+            return hit[1].model_copy(deep=True)
+
     query = f"{fault_code} {machine} {context}".strip()
 
     manuals_hits = _fetch_manuals(query)
@@ -162,4 +180,7 @@ def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis
         if s not in data["sources"]:
             data["sources"].append(s)
 
-    return Diagnosis(fault_code=fault_code, machine=machine, **data)
+    diag = Diagnosis(fault_code=fault_code, machine=machine, **data)
+    if ttl > 0:
+        _CACHE[key] = (time.monotonic() + ttl, diag.model_copy(deep=True))
+    return diag
