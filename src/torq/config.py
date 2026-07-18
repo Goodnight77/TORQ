@@ -48,11 +48,15 @@ class Settings(BaseSettings):
     manuals_collection: str = "torq_manuals"
     history_collection: str = "torq_history"
 
-    # Embedding model (fastembed, runs locally; swap later if needed)
+    # Embedding models (fastembed, run locally; swap later if needed)
     embedding_model: str = "BAAI/bge-small-en-v1.5"
+    sparse_model: str = "Qdrant/bm25"
+    rerank_model: str = "Xenova/ms-marco-MiniLM-L-6-v2"
 
     # Retrieval
     top_k: int = 4
+    use_hybrid: bool = True  # dense + BM25 sparse fused with RRF
+    use_rerank: bool = True  # cross-encoder rerank of fused candidates
 
 
 settings = Settings()
