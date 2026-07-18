@@ -6,6 +6,7 @@ fused with RRF), optionally reranked with a cross-encoder, and can be filtered b
 payload fields (machine, fault_code).
 """
 
+import uuid
 from datetime import datetime, timezone
 from functools import lru_cache
 
@@ -72,6 +73,32 @@ def _filter(filters: dict | None) -> models.Filter | None:
     return models.Filter(must=conds) if conds else None
 
 
+def _point_id(doc_id: str | int) -> str | int:
+    """Stable Qdrant point id from a document identifier.
+
+    Ints pass through; a string that already parses as a UUID is used as-is,
+    otherwise a deterministic uuid5 is derived. Same id -> same point, so a bulk
+    re-index and a later single upsert of the same record address one point and
+    update in place instead of creating a duplicate.
+    """
+    if isinstance(doc_id, int):
+        return doc_id
+    try:
+        return str(uuid.UUID(doc_id))
+    except ValueError:
+        return str(uuid.uuid5(uuid.NAMESPACE_DNS, doc_id))
+
+
+def _doc_id_for(payload: dict, fallback: int) -> str | int:
+    """Derive a stable document id from a payload: an explicit `id` (repair
+    history), else `source:chunk` (manual chunks), else the positional fallback."""
+    if payload.get("id"):
+        return str(payload["id"])
+    if payload.get("source") is not None:
+        return f'{payload["source"]}:{payload.get("chunk", 0)}'
+    return fallback
+
+
 def index_docs(collection: str, docs: list[str], payloads: list[dict]) -> int:
     """(Re)create a collection with dense + sparse vectors and index the docs."""
     if not docs:
@@ -100,7 +127,7 @@ def index_docs(collection: str, docs: list[str], payloads: list[dict]) -> int:
         collection_name=collection,
         points=[
             models.PointStruct(
-                id=i,
+                id=_point_id(_doc_id_for(payloads[i], i)),
                 vector={"dense": dense[i], "bm25": sparse[i]},
                 payload={**payloads[i], "document": docs[i], "indexed_at": now},
             )
@@ -130,15 +157,7 @@ def upsert_document(collection: str, doc_id: str | int, doc: str, payload: dict)
             except Exception:  # noqa: BLE001 - index is an optimization, not required
                 pass
 
-    if isinstance(doc_id, str):
-        import uuid
-        try:
-            uuid_val = uuid.UUID(doc_id)
-            point_id = str(uuid_val)
-        except ValueError:
-            point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, doc_id))
-    else:
-        point_id = doc_id
+    point_id = _point_id(doc_id)
 
     client.upsert(
         collection_name=collection,
