@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" width="420" height="120" role="img" aria-label="TORQ logo">
+  <rect width="420" height="120" fill="#0f1720"/>
+  <g fill="none" stroke="#3fb950" stroke-width="9" stroke-linecap="round">
+    <circle cx="60" cy="60" r="30"/>
+    <path d="M60 18 v-10 M60 112 v-10 M18 60 h-10 M112 60 h10 M30 30 l-7 -7 M90 90 l7 7 M90 30 l7 -7 M30 90 l-7 7"/>
+  </g>
+  <circle cx="60" cy="60" r="9" fill="#3fb950"/>
+  <text x="120" y="78" font-family="Segoe UI, Arial, sans-serif" font-size="62" font-weight="700" fill="#e6edf3">TORQ</text>
+  <text x="122" y="100" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#8b98a5">From fault code to fixed.</text>
+</svg>
