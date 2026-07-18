@@ -49,7 +49,11 @@ def _parse_json(text: str) -> dict:
 def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis:
     query = f"{fault_code} {machine} {context}".strip()
     manuals_txt, m_src = _join_manuals(search(settings.manuals_collection, query))
-    history_txt, h_src = _join_history(search(settings.history_collection, query))
+    # prefer past repairs on the same machine; fall back to all history if none
+    hist = search(settings.history_collection, query, filters={"machine": machine} if machine else None)
+    if not hist and machine:
+        hist = search(settings.history_collection, query)
+    history_txt, h_src = _join_history(hist)
 
     client = OpenAI(api_key=settings.llm_api_key, base_url=settings.llm_base_url)
     resp = client.chat.completions.create(
