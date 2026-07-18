@@ -48,7 +48,13 @@ function SavingsCalculator({ metrics }) {
 
   const torqDiagnosis = (metrics?.avg_time_to_diagnosis_sec || 0) / 60;
   const torqFix = metrics?.avg_time_to_fix_min || 0;
-  const torqMttr = torqDiagnosis + torqFix;
+  let torqMttr = torqDiagnosis + torqFix;
+  let isEstimate = false;
+
+  if (torqMttr === 0) {
+    torqMttr = 5;
+    isEstimate = true;
+  }
 
   const savedMinsPerFault = Math.max(0, baseline - torqMttr);
   const savedHoursPerWeek = (savedMinsPerFault * faults) / 60;
@@ -73,19 +79,33 @@ function SavingsCalculator({ metrics }) {
             <input type="number" value={baseline} onChange={e => setBaseline(Number(e.target.value))} />
           </label>
         </div>
-        <div className={styles.calcOutputs}>
-          <div className={styles.calcRes}>
-            <small>Hours saved / week</small>
-            <b>{savedHoursPerWeek.toFixed(1)}h</b>
+          <div className={styles.calcOutputs}>
+            <div className={styles.calcRes}>
+              <small>Hours saved / week</small>
+              <div className={styles.calcResRow}>
+                <b>{savedHoursPerWeek.toFixed(1)}h</b>
+                <span className={styles.calcFormula}>
+                  ({faults} faults &times; {savedMinsPerFault.toFixed(1)} min saved) &divide; 60
+                </span>
+              </div>
+            </div>
+            <div className={styles.calcRes}>
+              <small>Money saved / year</small>
+              <div className={styles.calcResRow}>
+                <b className={styles.money}>${Math.round(savedMoneyPerYear).toLocaleString()}</b>
+                <span className={styles.calcFormula}>
+                  ({faults} faults &times; {savedMinsPerFault.toFixed(1)} min &times; ${cost} &times; 52 wks)
+                </span>
+              </div>
+            </div>
+            <div className={styles.calcNote}>
+              {isEstimate ? (
+                <div>*based on est. TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
+              ) : (
+                <div>*based on measured TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
+              )}
+            </div>
           </div>
-          <div className={styles.calcRes}>
-            <small>Money saved / year</small>
-            <b className={styles.money}>${Math.round(savedMoneyPerYear).toLocaleString()}</b>
-          </div>
-          <div className={styles.calcNote}>
-            *based on TORQ avg MTTR of {torqMttr.toFixed(1)} mins
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -153,7 +173,7 @@ export default function Dashboard() {
     <div className={styles.app}>
       <header>
         <h1>
-          TORQ <span>Fault-to-Fix</span>
+          <img src="/logos/inline_logo.svg" alt="TORQ" />
         </h1>
         <div className={styles.sub}>Supervisor and downtime dashboard</div>
       </header>
@@ -204,7 +224,7 @@ export default function Dashboard() {
               <td>{w.fault_code}</td>
               <td className={styles.cause}>{w.root_cause}</td>
               <td className={styles.actions}>
-                <button disabled={busy} onClick={() => act(() => api.approve(w.id))}>
+                <button className={styles.approve} disabled={busy} onClick={() => act(() => api.approve(w.id))}>
                   Approve
                 </button>
                 <button className={styles.r} disabled={busy} onClick={() => act(() => api.reject(w.id))}>
@@ -242,7 +262,7 @@ export default function Dashboard() {
               <td>{w.assigned_to || "-"}</td>
               <td>
                 {w.status === "dispatched" && (
-                  <button disabled={busy} onClick={() => act(() => api.recordOutcome(w.id, FIX))}>
+                  <button className={styles.approve} disabled={busy} onClick={() => act(() => api.recordOutcome(w.id, FIX))}>
                     Mark fixed
                   </button>
                 )}

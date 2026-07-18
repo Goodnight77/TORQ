@@ -192,6 +192,11 @@ button:disabled {
   margin: 4px 0 8px;
 }
 
+.approve {
+  background: var(--green);
+  color: #06210d;
+}
+
 .badge {
   padding: 2px 9px;
   border-radius: 20px;
@@ -383,6 +388,19 @@ button:disabled {
 .calcRes b {
   font-size: 24px;
   color: var(--text);
+}
+
+.calcResRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calcFormula {
+  font-size: 10px;
+  color: var(--mute);
+  font-family: monospace;
+  opacity: 0.7;
 }
 
 .calcRes b.money {
