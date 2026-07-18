@@ -1,11 +1,13 @@
 """HTTP endpoints: faults, work orders, approvals, outcomes, dashboard metrics."""
 
+import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+from torq.config import settings
 from torq.db import models
 from torq.dispatch import approval
 from torq.knowledge import feedback
@@ -92,3 +94,12 @@ def outcome(wo_id: str, o: OutcomeIn):
 @router.get("/metrics")
 def metrics():
     return models.metrics()
+
+
+@router.get("/eval")
+def eval_results():
+    """Precomputed retrieval-eval results (dense vs hybrid vs hybrid+rerank)."""
+    p = settings.eval_results_file
+    if not p.exists():
+        return {"configs": []}
+    return json.loads(p.read_text(encoding="utf-8"))

@@ -20,8 +20,29 @@ function Badge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
 }
 
+function EvalCard({ data }) {
+  if (!data || !data.configs?.length) return null;
+  return (
+    <div className="evalcard">
+      <div className="evalhead">
+        Retrieval quality - MRR ({data.scenarios} labeled scenarios)
+      </div>
+      {data.configs.map((c) => (
+        <div className="evalrow" key={c.config}>
+          <span className="evallabel">{c.config}</span>
+          <span className="evalbar">
+            <i style={{ width: `${Math.round((c.mrr || 0) * 100)}%` }} />
+          </span>
+          <span className="evalval">{(c.mrr ?? 0).toFixed(3)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function App() {
   const [metrics, setMetrics] = useState(null);
+  const [evalData, setEvalData] = useState(null);
   const [pending, setPending] = useState([]);
   const [all, setAll] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -30,14 +51,16 @@ export default function App() {
 
   const load = useCallback(async () => {
     try {
-      const [m, p, a] = await Promise.all([
+      const [m, p, a, ev] = await Promise.all([
         api.getMetrics(),
         api.getWorkOrders("pending"),
         api.getWorkOrders(),
+        api.getEval().catch(() => null),
       ]);
       setMetrics(m);
       setPending(p);
       setAll(a);
+      setEvalData(ev);
       setErr(null);
     } catch (e) {
       setErr("Backend unreachable. Start it: uv run uvicorn torq.api.main:app");
@@ -92,6 +115,8 @@ export default function App() {
         <Tile label="Avg time to fix" value={mins(metrics?.avg_time_to_fix_min)} />
         <Tile label="Resolution rate" value={pct(metrics?.resolution_rate)} />
       </section>
+
+      <EvalCard data={evalData} />
 
       <button className="sim" disabled={busy} onClick={simulate}>
         Simulate fault (E-471, CM-350 Line 2)
