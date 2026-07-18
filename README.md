@@ -17,13 +17,6 @@ Machine ──▶ TORQ Agent ──▶ Work Order ──▶ Supervisor ──▶
    └───────────────────── outcome feedback ◀──────────────────┘
 ```
 
-## Docs
-
-- [docs/hackathon.md](docs/hackathon.md) — hackathon brief and goals
-- [docs/TORQ_La_Scaloneta.md](docs/TORQ_La_Scaloneta.md) — team / concept writeup
-- [docs/architecture.md](docs/architecture.md) — technical architecture
-- [CLAUDE.md](CLAUDE.md) — working notes and conventions for contributors
-
 ## Quick start
 
 TORQ uses [uv](https://docs.astral.sh/uv/) for environment and dependency management.
