@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle.jsx";
 import { useI18n } from "../i18n";
 import styles from "./Navbar.module.css";
@@ -11,6 +11,8 @@ const LANGS = [
 
 export default function Navbar() {
   const { locale, changeLocale, t } = useI18n();
+  const { pathname } = useLocation();
+  const h = (hash) => pathname === "/" ? hash : "/" + hash;
 
   return (
     <nav className={styles.nav}>
@@ -31,10 +33,10 @@ export default function Navbar() {
           </svg>
         </Link>
         <div className={styles.navLinks}>
-          <a href="#pipeline" className={styles.link}>Pipeline</a>
-          <a href="#features" className={styles.link}>Features</a>
-          <a href="#how-it-works" className={styles.link}>How it works</a>
-          <a href="#faq" className={styles.link}>FAQ</a>
+          <a href={h("#pipeline")} className={styles.link}>Pipeline</a>
+          <a href={h("#features")} className={styles.link}>Features</a>
+          <a href={h("#how-it-works")} className={styles.link}>How it works</a>
+          <a href={h("#faq")} className={styles.link}>FAQ</a>
           <Link to="/dashboard" className={styles.link}>{t("navbar.dashboard")}</Link>
         </div>
         <div className={styles.right}>
