@@ -206,6 +206,11 @@
   background: var(--surface);
 }
 
+[dir="rtl"] .btnPrimary svg,
+[dir="rtl"] .btnSecondary svg {
+  transform: scaleX(-1);
+}
+
 
 .statsSection {
   padding: 0 24px;

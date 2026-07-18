@@ -18,7 +18,7 @@ export default function Navbar() {
     <nav className={styles.nav}>
       <div className={styles.inner}>
         <Link to="/" className={styles.brand} onClick={(e) => {
-          if (window.location.pathname === '/') {
+          if (pathname === '/') {
             e.preventDefault();
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
