@@ -228,6 +228,33 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── FAQ ── */}
+      <section className={styles.faqSection} id="faq">
+        <div className={styles.sectionInner}>
+          <SectionTitle subtitle="Common questions about TORQ.">
+            FAQ
+          </SectionTitle>
+          <div className={styles.faqGrid}>
+            <div className={styles.faqCard}>
+              <h3>How does TORQ retrieve documentation?</h3>
+              <p>We use a hybrid search approach (dense vector + BM25) coupled with a cross-encoder reranker to pinpoint the exact paragraphs needed for any fault code.</p>
+            </div>
+            <div className={styles.faqCard}>
+              <h3>Can I add my own manuals?</h3>
+              <p>Yes. TORQ ingests standard PDF manuals, translates them, and chunks them automatically into the knowledge base.</p>
+            </div>
+            <div className={styles.faqCard}>
+              <h3>What languages are supported?</h3>
+              <p>Currently, the TORQ agent outputs in English, French, and Arabic to support diverse maintenance teams.</p>
+            </div>
+            <div className={styles.faqCard}>
+              <h3>Is my factory data secure?</h3>
+              <p>Absolutely. TORQ runs entirely on isolated infrastructure with zero data leakage to public models.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ── */}
       <section className={styles.ctaSection}>
         <div className={styles.ctaInner}>
