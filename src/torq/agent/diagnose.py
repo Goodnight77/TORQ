@@ -152,12 +152,10 @@ def _merge_sources(data: dict, extra: list[str]) -> None:
 
 def _diagnose_react(fault_code: str, machine: str, context: str) -> Diagnosis:
     """Reason/act loop: the LLM decides when to search manuals/history vs answer."""
-    # Imported lazily so a missing/broken langgraph install degrades to one-shot.
-    # create_react_agent is deprecated for removal in langgraph v2; swap to
-    # langchain.agents.create_agent (adds the langchain package) when upgrading.
+    # Imported lazily so a missing/broken install degrades to one-shot.
+    from langchain.agents import create_agent
     from langchain_core.tools import tool
     from langchain_openai import ChatOpenAI
-    from langgraph.prebuilt import create_react_agent
 
     collected: list[str] = []  # source ids surfaced by tool calls this run
 
@@ -181,7 +179,7 @@ def _diagnose_react(fault_code: str, machine: str, context: str) -> Diagnosis:
         base_url=settings.llm_base_url,
         temperature=0,
     )
-    agent = create_react_agent(model, [search_manuals, search_history], prompt=REACT_SYSTEM)
+    agent = create_agent(model, [search_manuals, search_history], system_prompt=REACT_SYSTEM)
     result = agent.invoke(
         {"messages": [("user", build_react_task(fault_code, machine, context))]},
         {"recursion_limit": settings.agent_max_steps * 2},

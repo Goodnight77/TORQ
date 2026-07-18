@@ -32,7 +32,7 @@ class TestMergeSources:
 
 class TestDiagnoseReact:
     @patch("langchain_openai.ChatOpenAI")
-    @patch("langgraph.prebuilt.create_react_agent")
+    @patch("langchain.agents.create_agent")
     def test_returns_diagnosis_with_injected_ids(self, mock_create, _mock_chat):
         """Final agent message is parsed; fault_code/machine come from the caller."""
         agent = MagicMock()
@@ -52,7 +52,7 @@ class TestDiagnoseReact:
         assert "REP-1" in result.sources
 
     @patch("langchain_openai.ChatOpenAI")
-    @patch("langgraph.prebuilt.create_react_agent")
+    @patch("langchain.agents.create_agent")
     def test_parses_fenced_json(self, mock_create, _mock_chat):
         agent = MagicMock()
         agent.invoke.return_value = {
