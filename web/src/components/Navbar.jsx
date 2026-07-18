@@ -10,7 +10,7 @@ const LANGS = [
 ];
 
 export default function Navbar() {
-  const { locale, changeLocale } = useI18n();
+  const { locale, changeLocale, t } = useI18n();
 
   return (
     <nav className={styles.nav}>
