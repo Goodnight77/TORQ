@@ -5,28 +5,38 @@ Run:  uv run python scripts/run_mqtt.py
 
 import sys
 import time
+from datetime import datetime, timezone
 
-sys.stdout.reconfigure(encoding="utf-8")  # Windows console defaults to cp1252
+sys.stdout.reconfigure(encoding="utf-8")
 
+import paho.mqtt.client as mqtt
+
+from torq.config import settings
 from torq.db import models
-from torq.events import simulator
-from torq.events.listener import build_client
+from torq.events.schemas import MachineFaultEvent
 
 
 def main() -> None:
     models.init_db()
     before = {w.id for w in models.list_by_status("pending")}
 
-    client = build_client()  # subscribes on connect
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    client.connect(settings.mqtt_broker_url, settings.mqtt_port, keepalive=60)
     client.loop_start()
-    time.sleep(1.0)  # let the subscription establish
+    time.sleep(1.0)
 
-    simulator.publish(
-        [{"fault_code": "J-108", "machine": "PK-9 Line 3", "context": "Film not advancing."}]
+    event = MachineFaultEvent(
+        machine_id="PK-9 Line 3",
+        fault_code="J-108",
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        severity=3,
+        context="Film not advancing.",
     )
+    client.publish(settings.mqtt_topic, event.model_dump_json(), qos=0)
+    print(f"[MQTT] published {event.model_dump_json()}")
 
     new: set[str] = set()
-    for _ in range(30):  # up to ~60s for round trip + diagnosis
+    for _ in range(30):
         time.sleep(2.0)
         new = {w.id for w in models.list_by_status("pending")} - before
         if new:

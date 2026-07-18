@@ -54,7 +54,12 @@ class _PostgresConnection:
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> bool | None:
-        return self._connection.__exit__(exc_type, exc_value, traceback)
+        # psycopg's context manager ends the transaction but keeps the connection
+        # open; close it here so we do not leak connections and exhaust the pool.
+        try:
+            return self._connection.__exit__(exc_type, exc_value, traceback)
+        finally:
+            self._connection.close()
 
     def execute(self, sql: str, parameters: tuple[Any, ...] = ()) -> Any:
         # Model queries are application-owned SQL, never user-provided strings.
@@ -67,6 +72,8 @@ def get_conn() -> sqlite3.Connection | _PostgresConnection:
     if settings.database_url:
         postgres_connection = cast(
             psycopg.Connection[dict[str, Any]],
+            # prepare_threshold=None: no server-side prepared statements, required
+            # for compatibility with the Supabase transaction pooler (port 6543).
             psycopg.connect(
                 settings.database_url, row_factory=cast(Any, dict_row), prepare_threshold=None
             ),

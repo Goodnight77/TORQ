@@ -1,16 +1,18 @@
 """HTTP endpoints: faults, work orders, approvals, outcomes, dashboard metrics."""
 
+import asyncio
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
 from torq.config import settings
 from torq.db import models
 from torq.dispatch import approval
+from torq.events import live
 from torq.knowledge import feedback
 from torq.pipeline import handle_fault
 from torq.workorder.pdf import render_pdf
@@ -130,6 +132,30 @@ def outcome(wo_id: str, o: OutcomeIn):
 @router.get("/metrics")
 def metrics():
     return models.metrics()
+
+
+@router.get("/events/stream")
+async def event_stream(request: Request):
+    """SSE endpoint: streams incoming MachineFaultEvent in real-time."""
+
+    async def generate():
+        last_seq = 0
+        while True:
+            for seq, event in list(live.RECENT_FAULTS):
+                if seq > last_seq:
+                    yield f"event: fault\ndata: {json.dumps(event)}\n\n"
+                    last_seq = seq
+            if await request.is_disconnected():
+                break
+            await asyncio.sleep(0.5)
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@router.get("/events/recent")
+def recent_events():
+    """Return the last 50 MachineFaultEvent dicts."""
+    return [event for _seq, event in live.RECENT_FAULTS]
 
 
 @router.get("/eval")
