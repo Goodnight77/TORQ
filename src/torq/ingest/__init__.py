@@ -124,10 +124,10 @@ def upsert_document(collection: str, doc_id: str | int, doc: str, payload: dict)
             },
             sparse_vectors_config={"bm25": models.SparseVectorParams(modifier=models.Modifier.IDF)},
         )
-        for field in _FILTER_FIELDS:
+        for field, schema in _PAYLOAD_INDEXES.items():
             try:
-                client.create_payload_index(collection, field, models.PayloadSchemaType.KEYWORD)
-            except Exception:
+                client.create_payload_index(collection, field, schema)
+            except Exception:  # noqa: BLE001 - index is an optimization, not required
                 pass
 
     if isinstance(doc_id, str):
@@ -146,7 +146,7 @@ def upsert_document(collection: str, doc_id: str | int, doc: str, payload: dict)
             models.PointStruct(
                 id=point_id,
                 vector={"dense": dense_vec, "bm25": sparse_vec},
-                payload={**payload, "document": doc},
+                payload={**payload, "document": doc, "indexed_at": datetime.now(timezone.utc).isoformat()},
             )
         ],
     )
