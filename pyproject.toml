@@ -5,11 +5,12 @@
 [project]
 name = "torq"
 version = "0.1.0"
-description = "TORQ — Fault-to-Fix Engine: autonomous machine diagnosis and repair dispatch."
+description = "TORQ - Fault-to-Fix Engine: autonomous machine diagnosis and repair dispatch."
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.139.2",
     "openai>=2.46.0",
+    "paho-mqtt>=2.1.0",
     "pydantic-settings>=2.14.2",
     "qdrant-client[fastembed]>=1.18.0",
     "uvicorn>=0.51.0",

@@ -5,4 +5,4 @@ Two core surfaces: the **approval queue** (one-tap review/approve of AI-generate
 repair work orders) and the **downtime dashboard** (time-to-diagnosis /
 time-to-fix metrics).
 
-Stack TBD — likely Next.js deployed on Vercel. This may change.
+Stack TBD - likely Next.js deployed on Vercel. This may change.

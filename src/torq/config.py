@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     twilio_auth_token: str = ""
     twilio_whatsapp_from: str = ""
 
+    # MQTT (machine fault events). Public broker by default; $0, no auth.
+    mqtt_broker_url: str = "broker.hivemq.com"
+    mqtt_port: int = 1883
+    mqtt_topic: str = "torq/demo/faults"
+
     # Local work-order store (SQLite; swap to Postgres later)
     db_path: Path = ROOT / "data" / "torq.db"
 

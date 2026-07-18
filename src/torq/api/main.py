@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="TORQ — Fault-to-Fix Engine", lifespan=lifespan)
+app = FastAPI(title="TORQ - Fault-to-Fix Engine", lifespan=lifespan)
 app.include_router(router, prefix="/api")
 
 
@@ -49,7 +49,7 @@ DASHBOARD_HTML = """
   button.r{background:#8b3232;margin-left:6px}button.sim{background:#1f6feb}
   h2{font-size:15px;color:#8b98a5;margin:24px 0 8px}
 </style></head><body>
-<header><h1>TORQ <span>Fault-to-Fix</span> — Supervisor Dashboard</h1></header>
+<header><h1>TORQ <span>Fault-to-Fix</span> - Supervisor Dashboard</h1></header>
 <main>
   <div class="tiles" id="tiles"></div>
   <button class="sim" onclick="simulate()">⚡ Simulate fault (E-471, CM-350 Line 2)</button>
@@ -78,9 +78,9 @@ async function load(){
   const m = await api('/metrics');
   document.getElementById('tiles').innerHTML = [
     ['Total work orders', m.total_work_orders],
-    ['Avg time to diagnosis', m.avg_time_to_diagnosis_sec!=null?m.avg_time_to_diagnosis_sec+'s':'—'],
-    ['Avg time to fix', m.avg_time_to_fix_min!=null?m.avg_time_to_fix_min+' min':'—'],
-    ['Resolution rate', m.resolution_rate!=null?Math.round(m.resolution_rate*100)+'%':'—'],
+    ['Avg time to diagnosis', m.avg_time_to_diagnosis_sec!=null?m.avg_time_to_diagnosis_sec+'s':'-'],
+    ['Avg time to fix', m.avg_time_to_fix_min!=null?m.avg_time_to_fix_min+' min':'-'],
+    ['Resolution rate', m.resolution_rate!=null?Math.round(m.resolution_rate*100)+'%':'-'],
   ].map(([l,v])=>`<div class="tile"><b>${v}</b><small>${l}</small></div>`).join('');
 
   const pend = await api('/work-orders?status=pending');
@@ -96,7 +96,7 @@ async function load(){
   document.getElementById('all').innerHTML =
     '<tr><th>ID</th><th>Machine</th><th>Fault</th><th>Status</th><th>Assigned</th><th></th></tr>'+
     all.map(w=>`<tr><td>${w.id}</td><td>${w.machine}</td><td>${w.fault_code}</td>
-      <td>${badge(w.status)}</td><td>${w.assigned_to||'—'}</td>
+      <td>${badge(w.status)}</td><td>${w.assigned_to||'-'}</td>
       <td>${w.status==='dispatched'?`<button onclick="resolve('${w.id}')">Mark fixed</button>`:''}</td></tr>`).join('');
 }
 load(); setInterval(load, 4000);

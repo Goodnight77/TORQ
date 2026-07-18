@@ -25,7 +25,7 @@ def _render_en(diag: Diagnosis) -> str:
         return f"{title}:\n{lines}\n"
 
     return (
-        f"WORK ORDER — {diag.machine or 'machine'} — fault {diag.fault_code}\n"
+        f"WORK ORDER - {diag.machine or 'machine'} - fault {diag.fault_code}\n"
         f"Root cause: {diag.root_cause}\n\n"
         f"{block('Repair steps', diag.repair_steps)}"
         f"{block('Parts', diag.parts)}"
