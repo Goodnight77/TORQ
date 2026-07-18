@@ -29,6 +29,7 @@ export const reportFault = (body) =>
 
 export const approve = (id) => j(`/work-orders/${id}/approve`, { method: "POST" });
 export const reject = (id) => j(`/work-orders/${id}/reject`, { method: "POST" });
+export const notify = (id) => j(`/work-orders/${id}/notify`, { method: "POST" });
 export const recordOutcome = (id, body) =>
   j(`/work-orders/${id}/outcome`, {
     method: "POST",

@@ -386,7 +386,7 @@ function FaultsPerMachineChart({ data, t }) {
   );
 }
 
-function Drawer({ workOrder, onClose, t }) {
+function Drawer({ workOrder, onClose, onNotify, busy, t }) {
   const w = workOrder;
   if (!w) return null;
 
@@ -419,6 +419,10 @@ function Drawer({ workOrder, onClose, t }) {
         <a className={styles.pdfLink} href={`/api/work-orders/${w.id}/pdf`} target="_blank" rel="noreferrer">
           {t("dashboard.download_pdf")}
         </a>
+
+        <button className={styles.simBtn} style={{ marginTop: 12 }} disabled={busy} onClick={() => onNotify(w)}>
+          Send WhatsApp to technician
+        </button>
 
         {w.root_cause && <p className={styles.cause}>{w.root_cause}</p>}
 
@@ -797,7 +801,13 @@ export default function Dashboard() {
           </table>
         </div>
 
-        <Drawer workOrder={selected} onClose={() => setSelected(null)} t={t} />
+        <Drawer
+          workOrder={selected}
+          onClose={() => setSelected(null)}
+          onNotify={(w) => act(() => api.notify(w.id), "WhatsApp sent to technician")}
+          busy={busy}
+          t={t}
+        />
 
         <MachineDrawer
           machine={machineDetail}
