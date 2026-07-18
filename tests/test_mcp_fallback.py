@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -14,6 +15,12 @@ from torq.agent.diagnose import _fetch_history, _fetch_manuals
 
 class TestFetchManuals:
     """Verify MCP-first retrieval with direct fallback for manuals."""
+
+    @pytest.fixture(autouse=True)
+    def _enable_mcp(self):
+        # These tests exercise the MCP path, so pretend a networked Qdrant is set.
+        with patch("torq.agent.diagnose.mcp_available", return_value=True):
+            yield
 
     MCP_HITS = [
         {"source": "pump_manual.pdf", "text": "Check impeller for cavitation"},
@@ -63,6 +70,11 @@ class TestFetchManuals:
 
 class TestFetchHistory:
     """Verify MCP-first retrieval with direct fallback for history."""
+
+    @pytest.fixture(autouse=True)
+    def _enable_mcp(self):
+        with patch("torq.agent.diagnose.mcp_available", return_value=True):
+            yield
 
     MCP_HITS = [
         {
@@ -139,3 +151,60 @@ class TestFetchHistory:
         result = _fetch_history("E-201", machine="CNC-LatheA")
 
         assert result == []  # not None -> _join_history won't crash
+
+
+# ── MCP gating: embedded Qdrant must not attempt MCP ─────────────────────────
+
+
+class TestMcpGating:
+    """When MCP is unavailable (embedded Qdrant), skip it and go direct."""
+
+    @patch("torq.agent.diagnose.search", return_value=[])
+    @patch("torq.agent.diagnose.mcp_search_manuals")
+    @patch("torq.agent.diagnose.mcp_available", return_value=False)
+    def test_manuals_skips_mcp_when_unavailable(self, _avail, mock_mcp, mock_search):
+        _fetch_manuals("E-201")
+        mock_mcp.assert_not_called()
+        mock_search.assert_called_once()
+
+    @patch("torq.agent.diagnose.search", return_value=[])
+    @patch("torq.agent.diagnose.mcp_search_history")
+    @patch("torq.agent.diagnose.mcp_available", return_value=False)
+    def test_history_skips_mcp_when_unavailable(self, _avail, mock_mcp, mock_search):
+        _fetch_history("E-201", machine="CNC-LatheA")
+        mock_mcp.assert_not_called()
+        assert mock_search.call_count >= 1
+
+
+# ── _extract_list: FastMCP result parsing ────────────────────────────────────
+
+
+class TestExtractList:
+    """Whole list must be recovered, not just content[0]."""
+
+    def test_prefers_structured_content(self):
+        from torq.mcp.client import _extract_list
+
+        items = [{"id": "A"}, {"id": "B"}]
+        # content is one block PER item; structuredContent holds the full list.
+        result = SimpleNamespace(
+            structuredContent={"result": items},
+            content=[SimpleNamespace(text='{"id": "A"}'), SimpleNamespace(text='{"id": "B"}')],
+        )
+        assert _extract_list(result) == items
+
+    def test_rebuilds_from_content_blocks(self):
+        from torq.mcp.client import _extract_list
+
+        # No structured payload (older server): rebuild from per-item blocks.
+        result = SimpleNamespace(
+            structuredContent=None,
+            content=[SimpleNamespace(text='{"id": "A"}'), SimpleNamespace(text='{"id": "B"}')],
+        )
+        assert _extract_list(result) == [{"id": "A"}, {"id": "B"}]
+
+    def test_empty_list(self):
+        from torq.mcp.client import _extract_list
+
+        result = SimpleNamespace(structuredContent={"result": []}, content=[])
+        assert _extract_list(result) == []

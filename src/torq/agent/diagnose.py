@@ -14,7 +14,7 @@ from torq.agent.prompts import SYSTEM, build_user_prompt
 from torq.agent.schemas import Diagnosis
 from torq.config import settings
 from torq.ingest import search  # direct fallback
-from torq.mcp.client import mcp_search_history, mcp_search_manuals
+from torq.mcp.client import mcp_available, mcp_search_history, mcp_search_manuals
 
 log = logging.getLogger(__name__)
 
@@ -53,12 +53,13 @@ def _join_history(hits: list[dict]) -> tuple[str, list[str]]:
 
 def _fetch_manuals(query: str) -> list[dict]:
     """Try MCP ``search_manuals``; fall back to direct ``ingest.search``."""
-    hits = mcp_search_manuals(query, limit=settings.top_k)
-    if hits is not None:
-        log.info("Manuals retrieved via MCP (%d hits)", len(hits))
-        return hits
+    if mcp_available():
+        hits = mcp_search_manuals(query, limit=settings.top_k)
+        if hits is not None:
+            log.info("Manuals retrieved via MCP (%d hits)", len(hits))
+            return hits
+        log.warning("MCP unavailable — falling back to direct manual search")
 
-    log.warning("MCP unavailable — falling back to direct manual search")
     raw = search(settings.manuals_collection, query)
     # Re-shape to match the MCP schema so _join_manuals works uniformly
     return [{"source": h.get("source", "manual"), "text": h.get("document", "")} for h in raw]
@@ -66,19 +67,20 @@ def _fetch_manuals(query: str) -> list[dict]:
 
 def _fetch_history(query: str, machine: str = "") -> list[dict]:
     """Try MCP ``search_history``; fall back to direct ``ingest.search``."""
-    hits = mcp_search_history(query, limit=settings.top_k, machine=machine)
-    if hits is not None:
-        log.info("History retrieved via MCP (%d hits)", len(hits))
-        # If machine-specific search returned nothing, retry without filter.
-        # Keep the original (empty) list if the retry itself fails, so we never
-        # return None to _join_history.
-        if not hits and machine:
-            retry = mcp_search_history(query, limit=settings.top_k)
-            if retry:
-                return retry
-        return hits
+    if mcp_available():
+        hits = mcp_search_history(query, limit=settings.top_k, machine=machine)
+        if hits is not None:
+            log.info("History retrieved via MCP (%d hits)", len(hits))
+            # If machine-specific search returned nothing, retry without filter.
+            # Keep the original (empty) list if the retry itself fails, so we
+            # never return None to _join_history.
+            if not hits and machine:
+                retry = mcp_search_history(query, limit=settings.top_k)
+                if retry:
+                    return retry
+            return hits
+        log.warning("MCP unavailable — falling back to direct history search")
 
-    log.warning("MCP unavailable — falling back to direct history search")
     filters = {"machine": machine} if machine else None
     raw = search(settings.history_collection, query, filters=filters)
     if not raw and machine:

@@ -4,6 +4,10 @@ Each public function spawns a short-lived MCP session (the server runs as a
 subprocess), calls one tool, and returns the parsed result.  If *anything* goes
 wrong (server not found, timeout, malformed response) the function returns
 ``None`` so the caller can fall back to a direct retrieval path.
+
+ponytail: one subprocess per call, so every call cold-loads the embedding models
+in the server. Fine for a demo; if latency bites, hold one long-lived session
+open (background thread + loop) and reuse it across calls.
 """
 
 from __future__ import annotations
@@ -21,12 +25,38 @@ from torq.config import settings
 log = logging.getLogger(__name__)
 
 
+def mcp_available() -> bool:
+    """Whether MCP retrieval is usable.
+
+    Needs a networked Qdrant (``qdrant_url``): the embedded on-disk store is
+    single-process (file-locked), so the server subprocess cannot open the same
+    store while the parent holds the lock; MCP would then silently and
+    permanently fall back to direct. With no ``qdrant_url`` the caller retrieves
+    directly instead.
+    """
+    return settings.use_mcp and bool(settings.qdrant_url)
+
+
 def _server_params() -> StdioServerParameters:
     """Build stdio launch parameters from config."""
     return StdioServerParameters(
         command=settings.mcp_server_command,
         args=settings.mcp_server_args,
     )
+
+
+def _extract_list(result: Any) -> list[dict]:
+    """Pull the list payload out of a CallToolResult.
+
+    FastMCP serializes a ``list[dict]`` return as
+    ``structuredContent={"result": [...]}`` and, separately, as one TextContent
+    block *per item* (so ``content[0]`` is only the first record - never parse
+    just that). Prefer the structured payload; rebuild from the blocks otherwise.
+    """
+    structured = getattr(result, "structuredContent", None)
+    if isinstance(structured, dict) and "result" in structured:
+        return structured["result"]
+    return [json.loads(c.text) for c in result.content]  # type: ignore[union-attr]
 
 
 async def _call_tool(name: str, arguments: dict[str, Any]) -> list[dict] | None:
@@ -36,13 +66,10 @@ async def _call_tool(name: str, arguments: dict[str, Any]) -> list[dict] | None:
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 result = await session.call_tool(name, arguments)
-                # call_tool returns a CallToolResult; content is a list of
-                # Content objects.  We expect a single TextContent with JSON.
                 if result.isError:
                     log.warning("MCP tool %s returned an error: %s", name, result.content)
                     return None
-                text = result.content[0].text  # type: ignore[union-attr]
-                return json.loads(text)
+                return _extract_list(result)
     except Exception:  # noqa: BLE001 — any failure → caller falls back
         log.warning("MCP call to '%s' failed, will fall back to direct retrieval", name, exc_info=True)
         return None
