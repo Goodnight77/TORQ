@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar.jsx";
 import PipelineDiagram from "../components/PipelineDiagram.jsx";
 import FeatureCard from "../components/FeatureCard.jsx";
-import { IconDiagnosis, IconDocument, IconPin, IconRefresh, IconArrowRight, IconArrowDown } from "../components/icons.jsx";
+import { IconDiagnosis, IconDocument, IconPin, IconRefresh, IconBroadcast, IconArrowRight, IconArrowDown } from "../components/icons.jsx";
 import Footer from "../components/Footer.jsx";
 import styles from "./LandingPage.module.css";
 
@@ -27,6 +27,11 @@ const features = [
     icon: <IconRefresh />,
     title: "Self Learning",
     description: "Every fix enriches the knowledge base. The model gets smarter with each resolved fault.",
+  },
+  {
+    icon: <IconBroadcast />,
+    title: "Works With Your Setup",
+    description: "Report faults from the dashboard, connect machines that send digital alerts, or bridge older equipment — no special hardware required.",
   },
 ];
 
@@ -199,8 +204,8 @@ export default function LandingPage() {
             <div className={styles.step}>
               <span className={styles.stepNum}>1</span>
               <div className={styles.stepBody}>
-                <h3 className={styles.stepTitle}>Fault arrives via MQTT</h3>
-                <p className={styles.stepDesc}>Machine emits a fault code to the TORQ edge gateway. The event is ingested and enriched with machine context in milliseconds.</p>
+                <h3 className={styles.stepTitle}>A fault comes in</h3>
+                <p className={styles.stepDesc}>A technician reports it from the dashboard, a connected machine sends an alert, or a bridge picks it up from older controllers. TORQ starts immediately, no matter how the fault arrives.</p>
               </div>
             </div>
             <div className={styles.step}>
