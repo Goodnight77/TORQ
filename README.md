@@ -77,6 +77,98 @@ The built-in dashboard supports fault simulation, approval, rejection, resolutio
 
 Use TORQ through its REST API, MQTT listener, React dashboard, or MCP server. The MCP interface exposes manual and repair-history search as standalone tools for compatible AI clients.
 
+## diagram
+
+```mermaid
+flowchart TD
+
+subgraph group_interfaces["Interfaces"]
+  node_http_api["FastAPI API &amp; dashboard<br/>[main.py]"]
+  node_api_routes["API routes<br/>route handlers<br/>[routes.py]"]
+  node_react_dashboard["React dashboard<br/>Vite client<br/>[App.jsx]"]
+  node_mqtt_listener["MQTT listener<br/>event adapter<br/>[listener.py]"]
+  node_mcp_server["MCP server<br/>AI integration<br/>[server.py]"]
+end
+
+subgraph group_core["Core workflow"]
+  node_pipeline{{"Fault pipeline<br/>orchestrator<br/>[pipeline.py]"}}
+end
+
+subgraph group_knowledge["Knowledge &amp; AI"]
+  node_diagnosis_agent{{"Structured diagnosis<br/>LLM agent<br/>[diagnose.py]"}}
+  node_manual_ingest["Manual ingestion<br/>knowledge ingestion<br/>[manuals.py]"]
+  node_history_ingest["History ingestion<br/>knowledge ingestion<br/>[history.py]"]
+  node_retrieval["Hybrid retrieval<br/>knowledge search<br/>[connectors.py]"]
+  node_feedback["Outcome feedback<br/>learning loop<br/>[feedback.py]"]
+end
+
+subgraph group_operations["Work orders &amp; dispatch"]
+  node_workorder_generation["Work-order generation<br/>document builder<br/>[generate.py]"]
+  node_pdf_renderer["Multilingual PDF renderer<br/>document renderer<br/>[pdf.py]"]
+  node_approval{{"Approval lifecycle<br/>workflow gate<br/>[approval.py]"}}
+  node_routing["Technician routing<br/>dispatch matcher<br/>[routing.py]"]
+  node_notification["WhatsApp notification<br/>delivery adapter<br/>[notify.py]"]
+end
+
+subgraph group_storage["Persistence"]
+  node_qdrant[("Qdrant collections<br/>vector store<br/>[docker-compose.yml]")]
+  node_database[("Operational database<br/>SQLite / PostgreSQL<br/>[session.py]")]
+end
+
+node_react_dashboard -->|"/api"| node_http_api
+node_http_api -->|"serves"| node_api_routes
+node_api_routes -->|"submits faults"| node_pipeline
+node_mqtt_listener -->|"fault events"| node_pipeline
+node_mcp_server -->|"knowledge search"| node_retrieval
+node_pipeline -->|"retrieves evidence"| node_retrieval
+node_retrieval -->|"hybrid search"| node_qdrant
+node_manual_ingest -->|"manual collection"| node_qdrant
+node_history_ingest -->|"history collection"| node_qdrant
+node_pipeline -->|"fault + evidence"| node_diagnosis_agent
+node_diagnosis_agent -->|"structured diagnosis"| node_workorder_generation
+node_workorder_generation -->|"persists pending order"| node_database
+node_workorder_generation -->|"renders"| node_pdf_renderer
+node_api_routes -->|"review decision"| node_approval
+node_approval -->|"on approval"| node_routing
+node_routing -->|"assigned technician"| node_notification
+node_api_routes -->|"resolved outcome"| node_feedback
+node_feedback -->|"reindex history"| node_history_ingest
+node_api_routes -->|"work orders &amp; metrics"| node_database
+
+click node_http_api "https://github.com/goodnight77/torq/blob/main/src/torq/api/main.py"
+click node_api_routes "https://github.com/goodnight77/torq/blob/main/src/torq/api/routes.py"
+click node_react_dashboard "https://github.com/goodnight77/torq/blob/main/web/src/App.jsx"
+click node_mqtt_listener "https://github.com/goodnight77/torq/blob/main/src/torq/events/listener.py"
+click node_mcp_server "https://github.com/goodnight77/torq/blob/main/src/torq/mcp/server.py"
+click node_pipeline "https://github.com/goodnight77/torq/blob/main/src/torq/pipeline.py"
+click node_diagnosis_agent "https://github.com/goodnight77/torq/blob/main/src/torq/agent/diagnose.py"
+click node_manual_ingest "https://github.com/goodnight77/torq/blob/main/src/torq/ingest/manuals.py"
+click node_history_ingest "https://github.com/goodnight77/torq/blob/main/src/torq/ingest/history.py"
+click node_retrieval "https://github.com/goodnight77/torq/blob/main/src/torq/mcp/connectors.py"
+click node_qdrant "https://github.com/goodnight77/torq/blob/main/docker-compose.yml"
+click node_workorder_generation "https://github.com/goodnight77/torq/blob/main/src/torq/workorder/generate.py"
+click node_pdf_renderer "https://github.com/goodnight77/torq/blob/main/src/torq/workorder/pdf.py"
+click node_approval "https://github.com/goodnight77/torq/blob/main/src/torq/dispatch/approval.py"
+click node_routing "https://github.com/goodnight77/torq/blob/main/src/torq/dispatch/routing.py"
+click node_notification "https://github.com/goodnight77/torq/blob/main/src/torq/dispatch/notify.py"
+click node_feedback "https://github.com/goodnight77/torq/blob/main/src/torq/knowledge/feedback.py"
+click node_database "https://github.com/goodnight77/torq/blob/main/src/torq/db/session.py"
+
+classDef toneNeutral fill:#f8fafc,stroke:#334155,stroke-width:1.5px,color:#0f172a
+classDef toneBlue fill:#dbeafe,stroke:#2563eb,stroke-width:1.5px,color:#172554
+classDef toneAmber fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#78350f
+classDef toneMint fill:#dcfce7,stroke:#16a34a,stroke-width:1.5px,color:#14532d
+classDef toneRose fill:#ffe4e6,stroke:#e11d48,stroke-width:1.5px,color:#881337
+classDef toneIndigo fill:#e0e7ff,stroke:#4f46e5,stroke-width:1.5px,color:#312e81
+classDef toneTeal fill:#ccfbf1,stroke:#0f766e,stroke-width:1.5px,color:#134e4a
+class node_http_api,node_api_routes,node_react_dashboard,node_mqtt_listener,node_mcp_server toneBlue
+class node_pipeline toneAmber
+class node_diagnosis_agent,node_manual_ingest,node_history_ingest,node_retrieval,node_feedback toneMint
+class node_workorder_generation,node_pdf_renderer,node_approval,node_routing,node_notification toneRose
+class node_qdrant,node_database toneIndigo
+```
+
+
 ## Quick start
 
 ### Prerequisites
