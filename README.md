@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logos/inline_logo_dark_mode.svg" alt="TORQ" width="420">
+  <img src="assets/logos/inline_logo.svg" alt="TORQ" width="420">
 
   [![CI](https://github.com/Goodnight77/TORQ/actions/workflows/ci.yml/badge.svg)](https://github.com/Goodnight77/TORQ/actions/workflows/ci.yml)
   ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
