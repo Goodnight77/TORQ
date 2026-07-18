@@ -3,6 +3,7 @@
 from torq.agent.schemas import WorkOrder, _now
 from torq.db import models
 from torq.dispatch import notify, routing
+from torq.workorder.pdf import render_pdf
 
 
 def submit(wo: WorkOrder) -> WorkOrder:
@@ -35,6 +36,11 @@ def approve(wo_id: str) -> tuple[WorkOrder, dict] | None:
         wo.status = "approved"  # approved but no one on shift to take it
         models.save(wo)
         return wo, {"channel": "none", "error": "no technician available"}
+
+    try:
+        wo.pdf_path = str(render_pdf(wo))
+    except Exception as e:  # noqa: BLE001 - PDF is a nice-to-have, never block dispatch
+        print(f"[approval] PDF render skipped: {e}")
 
     delivery = notify.dispatch(wo, tech)
     wo.status = "dispatched"

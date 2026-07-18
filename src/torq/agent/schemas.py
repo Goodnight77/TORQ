@@ -39,3 +39,4 @@ class WorkOrder(BaseModel):
     dispatched_at: str | None = None
     resolved_at: str | None = None
     outcome: dict | None = None  # {resolved, actual_fix, notes, time_to_fix_min}
+    pdf_path: str | None = None

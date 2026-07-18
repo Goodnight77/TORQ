@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # Local work-order store (SQLite; swap to Postgres later)
     db_path: Path = ROOT / "data" / "torq.db"
 
+    # Work-order PDF rendering
+    font_path: Path = ROOT / "assets" / "fonts" / "Amiri-Regular.ttf"
+    workorder_dir: Path = ROOT / "data" / "workorders"
+
     # Data locations
     manuals_dir: Path = ROOT / "data" / "manuals"
     history_file: Path = ROOT / "data" / "history" / "repairs.json"
