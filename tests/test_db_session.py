@@ -41,7 +41,7 @@ class DatabaseSessionTests(unittest.TestCase):
                 )
 
         connect.assert_called_once_with(
-            "postgresql://example.invalid/torq", row_factory=ANY
+            "postgresql://example.invalid/torq", row_factory=ANY, prepare_threshold=None
         )
         backend.execute.assert_called_once_with(
             "SELECT data FROM work_orders WHERE id = %s", ("wo-1",)
