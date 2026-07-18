@@ -10,9 +10,10 @@ def search_manuals(query: str, limit: int = 4) -> list[dict]:
     return [{"source": h.get("source", "manual"), "text": h.get("document", "")} for h in hits]
 
 
-def search_history(query: str, limit: int = 4) -> list[dict]:
+def search_history(query: str, limit: int = 4, machine: str = "") -> list[dict]:
     """Return matching past repairs (fault, cause, fix, notes)."""
-    hits = search(settings.history_collection, query, limit)
+    filters = {"machine": machine} if machine else None
+    hits = search(settings.history_collection, query, limit, filters=filters)
     return [
         {
             "id": h.get("id"),

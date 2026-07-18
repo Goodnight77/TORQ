@@ -20,9 +20,9 @@ def search_manuals(query: str, limit: int = 4) -> list[dict]:
 
 
 @mcp.tool()
-def search_history(query: str, limit: int = 4) -> list[dict]:
+def search_history(query: str, limit: int = 4, machine: str = "") -> list[dict]:
     """Search past repair records for fixes to similar faults."""
-    return connectors.search_history(query, limit)
+    return connectors.search_history(query, limit, machine=machine)
 
 
 if __name__ == "__main__":
