@@ -11,12 +11,31 @@ from typing import Any, LiteralString, Self, cast
 
 import psycopg
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 from torq.config import settings
 
 
 _REPLACE_WORK_ORDER = re.compile(r"^\s*REPLACE\s+INTO\s+work_orders\b", re.IGNORECASE)
 _ROWID = re.compile(r"\browid\b", re.IGNORECASE)
+
+_pool: ConnectionPool | None = None
+
+
+def _get_pool() -> ConnectionPool:
+    global _pool
+    if _pool is None:
+        _pool = ConnectionPool(
+            settings.database_url,
+            min_size=0,
+            max_size=10,
+            max_idle=300,
+            kwargs={"row_factory": cast(Any, dict_row), "prepare_threshold": None},
+        )
+        import atexit
+
+        atexit.register(_pool.close)
+    return _pool
 
 
 def _postgres_sql(sql: str) -> str:
@@ -39,13 +58,16 @@ def _postgres_sql(sql: str) -> str:
 
 
 class _PostgresConnection:
-    """Expose the connection methods used by the unchanged model functions."""
+    """Borrow a connection from the pool and translate SQL for Postgres."""
 
-    def __init__(self, connection: psycopg.Connection[dict[str, Any]]) -> None:
-        self._connection = connection
+    def __init__(self, pool_connection: ConnectionPool) -> None:
+        self._pool_connection = pool_connection
+        self._connection: psycopg.Connection[dict[str, Any]] | None = None
 
     def __enter__(self) -> Self:
-        self._connection.__enter__()
+        self._connection = cast(
+            psycopg.Connection[dict[str, Any]], self._pool_connection.__enter__()
+        )
         return self
 
     def __exit__(
@@ -54,31 +76,17 @@ class _PostgresConnection:
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> bool | None:
-        # psycopg's context manager ends the transaction but keeps the connection
-        # open; close it here so we do not leak connections and exhaust the pool.
-        try:
-            return self._connection.__exit__(exc_type, exc_value, traceback)
-        finally:
-            self._connection.close()
+        return self._pool_connection.__exit__(exc_type, exc_value, traceback)
 
     def execute(self, sql: str, parameters: tuple[Any, ...] = ()) -> Any:
-        # Model queries are application-owned SQL, never user-provided strings.
         query = cast(LiteralString, _postgres_sql(sql))
         return self._connection.execute(query, parameters)
 
 
 def get_conn() -> sqlite3.Connection | _PostgresConnection:
-    """Return Postgres when configured, otherwise the local SQLite database."""
+    """Return a pooled Postgres connection when DATABASE_URL is set, else SQLite."""
     if settings.database_url:
-        postgres_connection = cast(
-            psycopg.Connection[dict[str, Any]],
-            # prepare_threshold=None: no server-side prepared statements, required
-            # for compatibility with the Supabase transaction pooler (port 6543).
-            psycopg.connect(
-                settings.database_url, row_factory=cast(Any, dict_row), prepare_threshold=None
-            ),
-        )
-        return _PostgresConnection(postgres_connection)
+        return _PostgresConnection(_get_pool().connection())
 
     sqlite_connection = sqlite3.connect(settings.db_path)
     sqlite_connection.row_factory = sqlite3.Row

@@ -3,8 +3,9 @@
 import sqlite3
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from torq.config import settings
 from torq.db.session import _postgres_sql, get_conn
@@ -30,21 +31,24 @@ class DatabaseSessionTests(unittest.TestCase):
         backend = MagicMock()
         cursor = object()
         backend.execute.return_value = cursor
+        pool = MagicMock()
+
+        @contextmanager
+        def pooled_connection():
+            yield backend
+
+        pool.connection.return_value = pooled_connection()
 
         with (
             patch.object(settings, "database_url", "postgresql://example.invalid/torq"),
-            patch("torq.db.session.psycopg.connect", return_value=backend) as connect,
+            patch("torq.db.session._get_pool", return_value=pool),
         ):
             with get_conn() as connection:
                 result = connection.execute(
                     "SELECT data FROM work_orders WHERE id = ?", ("wo-1",)
                 )
 
-        connect.assert_called_once_with(
-            "postgresql://example.invalid/torq",
-            row_factory=ANY,
-            prepare_threshold=None,
-        )
+        pool.connection.assert_called_once_with()
         backend.execute.assert_called_once_with(
             "SELECT data FROM work_orders WHERE id = %s", ("wo-1",)
         )

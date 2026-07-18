@@ -2,7 +2,7 @@
   "name": "torq-web",
   "private": true,
   "version": "0.1.0",
-  "description": "TORQ web dashboard: supervisor approval queue and downtime metrics",
+  "description": "TORQ — Fault-to-Fix Engine: landing page and supervisor dashboard",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
