@@ -31,6 +31,7 @@ class WorkOrder(BaseModel):
     tools: list[str] = []
     safety_warnings: list[str] = []
     required_skill: str = "general"
+    sources: list[str] = []  # manual sections + past repairs the diagnosis cited
     content: dict[str, str] = {}  # language code (fr/ar/en) -> formatted text
     status: str = "pending"  # pending | approved | rejected | dispatched | resolved | failed
     assigned_to: str | None = None

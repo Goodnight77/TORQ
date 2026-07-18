@@ -183,6 +183,16 @@ export default function App() {
               {selected.machine} - {selected.fault_code}
             </h3>
             <p className="cause">{selected.root_cause}</p>
+            {selected.sources?.length > 0 && (
+              <div className="sources">
+                <div className="langlabel">Grounded in</div>
+                <ul>
+                  {selected.sources.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {["en", "fr", "ar"].map((lng) =>
               selected.content?.[lng] ? (
                 <div key={lng} className="lang">
