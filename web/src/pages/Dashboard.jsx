@@ -416,7 +416,7 @@ function StatusFilter({ value, onChange, t }) {
   );
 }
 
-function ManualFaultForm({ onReport, busy }) {
+function ManualFaultForm({ onReport, busy, t }) {
   const [open, setOpen] = useState(false);
   const [machine, setMachine] = useState("");
   const [faultCode, setFaultCode] = useState("");
@@ -435,33 +435,33 @@ function ManualFaultForm({ onReport, busy }) {
   return (
     <div className={styles.manualForm}>
       <button className={styles.manualFormToggle} onClick={() => setOpen(!open)}>
-        {open ? "−" : "+"} Report a fault
+        {open ? "−" : "+"} {t("dashboard.report_fault")}
       </button>
       {open && (
         <form className={styles.manualFormBody} onSubmit={handleSubmit}>
           <input
             className={styles.manualFormInput}
-            placeholder="Machine (e.g. CM-350 Line 2)"
+            placeholder={t("dashboard.machine_placeholder")}
             value={machine}
             onChange={(e) => setMachine(e.target.value)}
             required
           />
           <input
             className={styles.manualFormInput}
-            placeholder="Fault code (e.g. E-471)"
+            placeholder={t("dashboard.fault_code_placeholder")}
             value={faultCode}
             onChange={(e) => setFaultCode(e.target.value)}
             required
           />
           <textarea
             className={styles.manualFormInput}
-            placeholder="Context / observations (optional)"
+            placeholder={t("dashboard.context_placeholder")}
             value={context}
             onChange={(e) => setContext(e.target.value)}
             rows={2}
           />
           <button className={styles.approveBtn} type="submit" disabled={busy}>
-            Submit fault
+            {t("dashboard.submit_fault")}
           </button>
         </form>
       )}
@@ -624,7 +624,7 @@ export default function Dashboard() {
           <button className={styles.simBtn} disabled={busy || loading} onClick={simulate}>
             {t("dashboard.simulate")}
           </button>
-          <ManualFaultForm onReport={(msg) => act(() => api.reportFault(msg), t("dashboard.toast_simulated"))} busy={busy} />
+          <ManualFaultForm onReport={(msg) => act(() => api.reportFault(msg), t("dashboard.toast_simulated"))} busy={busy} t={t} />
         </div>
 
         <h2 className={styles.sectionTitle}>{t("dashboard.pending")}</h2>
