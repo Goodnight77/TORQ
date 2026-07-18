@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import * as api from "../api.js";
+import Navbar from "../components/Navbar.jsx";
 import styles from "./Dashboard.module.css";
 
 const FIX = {
@@ -18,23 +19,23 @@ function Tile({ label, value }) {
 }
 
 function Badge({ status }) {
-  return <span className={`${styles.badge} ${styles[status]}`}>{status}</span>;
+  return <span className={`${styles.badge} ${styles[status] || ""}`}>{status}</span>;
 }
 
 function EvalCard({ data }) {
   if (!data || !data.configs?.length) return null;
   return (
-    <div className={styles.evalcard}>
-      <div className={styles.evalhead}>
-        Retrieval quality - MRR ({data.scenarios} labeled scenarios)
+    <div className={styles.card}>
+      <div className={styles.cardHead}>
+        Retrieval quality &mdash; MRR ({data.scenarios} labeled scenarios)
       </div>
       {data.configs.map((c) => (
-        <div className={styles.evalrow} key={c.config}>
-          <span className={styles.evallabel}>{c.config}</span>
-          <span className={styles.evalbar}>
+        <div className={styles.evalRow} key={c.config}>
+          <span className={styles.evalLabel}>{c.config}</span>
+          <span className={styles.evalBar}>
             <i style={{ width: `${Math.round((c.mrr || 0) * 100)}%` }} />
           </span>
-          <span className={styles.evalval}>{(c.mrr ?? 0).toFixed(3)}</span>
+          <span className={styles.evalVal}>{(c.mrr ?? 0).toFixed(3)}</span>
         </div>
       ))}
     </div>
@@ -62,8 +63,8 @@ function SavingsCalculator({ metrics }) {
   const savedMoneyPerYear = savedMoneyPerWeek * 52;
 
   return (
-    <div className={`${styles.evalcard} ${styles.calcCard}`}>
-      <div className={styles.evalhead}>ROI & Savings Calculator</div>
+    <div className={`${styles.card} ${styles.calcCard}`}>
+      <div className={styles.cardHead}>ROI &amp; Savings Calculator</div>
       <div className={styles.calcGrid}>
         <div className={styles.calcInputs}>
           <label>
@@ -79,33 +80,33 @@ function SavingsCalculator({ metrics }) {
             <input type="number" value={baseline} onChange={e => setBaseline(Number(e.target.value))} />
           </label>
         </div>
-          <div className={styles.calcOutputs}>
-            <div className={styles.calcRes}>
-              <small>Hours saved / week</small>
-              <div className={styles.calcResRow}>
-                <b>{savedHoursPerWeek.toFixed(1)}h</b>
-                <span className={styles.calcFormula}>
-                  ({faults} faults &times; {savedMinsPerFault.toFixed(1)} min saved) &divide; 60
-                </span>
-              </div>
-            </div>
-            <div className={styles.calcRes}>
-              <small>Money saved / year</small>
-              <div className={styles.calcResRow}>
-                <b className={styles.money}>${Math.round(savedMoneyPerYear).toLocaleString()}</b>
-                <span className={styles.calcFormula}>
-                  ({faults} faults &times; {savedMinsPerFault.toFixed(1)} min &times; ${cost} &times; 52 wks)
-                </span>
-              </div>
-            </div>
-            <div className={styles.calcNote}>
-              {isEstimate ? (
-                <div>*based on est. TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
-              ) : (
-                <div>*based on measured TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
-              )}
+        <div className={styles.calcOutputs}>
+          <div className={styles.calcRes}>
+            <small>Hours saved / week</small>
+            <div className={styles.calcResRow}>
+              <b>{savedHoursPerWeek.toFixed(1)}h</b>
+              <span className={styles.calcFormula}>
+                ({faults} faults &times; {savedMinsPerFault.toFixed(1)} min) &divide; 60
+              </span>
             </div>
           </div>
+          <div className={styles.calcRes}>
+            <small>Money saved / year</small>
+            <div className={styles.calcResRow}>
+              <b className={styles.money}>${Math.round(savedMoneyPerYear).toLocaleString()}</b>
+              <span className={styles.calcFormula}>
+                ({faults} faults &times; {savedMinsPerFault.toFixed(1)} min &times; ${cost} &times; 52 wks)
+              </span>
+            </div>
+          </div>
+          <div className={styles.calcNote}>
+            {isEstimate ? (
+              <div>*based on est. TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
+            ) : (
+              <div>*based on measured TORQ avg MTTR of {torqMttr.toFixed(1)} mins</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -170,144 +171,130 @@ export default function Dashboard() {
   const mins = (x) => (x == null ? "-" : x + " min");
 
   return (
-    <div className={styles.app}>
-      <header>
-        <h1>
-          <img src="/logos/inline_logo.svg" alt="TORQ" />
-        </h1>
-        <div className={styles.sub}>Supervisor and downtime dashboard</div>
-      </header>
+    <div className={styles.page}>
+      <Navbar />
 
-      {err && <div className={styles.err}>{err}</div>}
+      <div className={styles.app}>
+        <header className={styles.header}>
+          <h1 className={styles.heading}>Supervisor dashboard</h1>
+          <p className={styles.sub}>Approval queue and downtime metrics</p>
+        </header>
 
-      <section className={styles.tiles}>
-        <Tile label="Total work orders" value={metrics?.total_work_orders ?? "-"} />
-        <Tile label="Avg time to diagnosis" value={secs(metrics?.avg_time_to_diagnosis_sec)} />
-        <Tile label="Avg time to fix" value={mins(metrics?.avg_time_to_fix_min)} />
-        <Tile label="Resolution rate" value={pct(metrics?.resolution_rate)} />
-      </section>
+        {err && <div className={styles.err}>{err}</div>}
 
-      <div className={styles.dashboardGrid}>
-        <EvalCard data={evalData} />
-        <SavingsCalculator metrics={metrics} />
-      </div>
+        <section className={styles.tiles}>
+          <Tile label="Total work orders" value={metrics?.total_work_orders ?? "-"} />
+          <Tile label="Avg time to diagnosis" value={secs(metrics?.avg_time_to_diagnosis_sec)} />
+          <Tile label="Avg time to fix" value={mins(metrics?.avg_time_to_fix_min)} />
+          <Tile label="Resolution rate" value={pct(metrics?.resolution_rate)} />
+        </section>
 
-      <button className={styles.sim} disabled={busy} onClick={simulate}>
-        Simulate fault (E-471, CM-350 Line 2)
-      </button>
-
-      <h2>Pending approval</h2>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Machine</th>
-            <th>Fault</th>
-            <th>Root cause</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {pending.length === 0 && (
-            <tr>
-              <td colSpan={5} className={styles.muted}>
-                Queue empty
-              </td>
-            </tr>
-          )}
-          {pending.map((w) => (
-            <tr key={w.id}>
-              <td>
-                <a className={styles.link} onClick={() => setSelected(w)}>{w.id}</a>
-              </td>
-              <td>{w.machine}</td>
-              <td>{w.fault_code}</td>
-              <td className={styles.cause}>{w.root_cause}</td>
-              <td className={styles.actions}>
-                <button className={styles.approve} disabled={busy} onClick={() => act(() => api.approve(w.id))}>
-                  Approve
-                </button>
-                <button className={styles.r} disabled={busy} onClick={() => act(() => api.reject(w.id))}>
-                  Reject
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h2>All work orders</h2>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Machine</th>
-            <th>Fault</th>
-            <th>Status</th>
-            <th>Assigned</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {all.map((w) => (
-            <tr key={w.id}>
-              <td>
-                <a className={styles.link} onClick={() => setSelected(w)}>{w.id}</a>
-              </td>
-              <td>{w.machine}</td>
-              <td>{w.fault_code}</td>
-              <td>
-                <Badge status={w.status} />
-              </td>
-              <td>{w.assigned_to || "-"}</td>
-              <td>
-                {w.status === "dispatched" && (
-                  <button className={styles.approve} disabled={busy} onClick={() => act(() => api.recordOutcome(w.id, FIX))}>
-                    Mark fixed
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {selected && (
-        <div className={styles.drawer} onClick={() => setSelected(null)}>
-          <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.close} onClick={() => setSelected(null)}>
-              close
-            </button>
-            <h3>
-              {selected.machine} - {selected.fault_code}
-            </h3>
-            <a className={styles.pdf} href={`/api/work-orders/${selected.id}/pdf`} target="_blank" rel="noreferrer">
-              Download PDF (EN/FR/AR)
-            </a>
-            <p className={styles.cause}>{selected.root_cause}</p>
-            {selected.sources?.length > 0 && (
-              <div className={styles.sources}>
-                <div className={styles.langlabel}>Grounded in</div>
-                <ul>
-                  {selected.sources.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {["en", "fr", "ar"].map((lng) =>
-              selected.content?.[lng] ? (
-                <div key={lng} className={styles.lang}>
-                  <div className={styles.langlabel}>{lng.toUpperCase()}</div>
-                  <pre dir={lng === "ar" ? "rtl" : "ltr"}>{selected.content[lng]}</pre>
-                </div>
-              ) : null
-            )}
-          </div>
+        <div className={styles.grid}>
+          <EvalCard data={evalData} />
+          <SavingsCalculator metrics={metrics} />
         </div>
-      )}
 
-      <footer className={styles.footer}>From fault code to fixed.</footer>
+        <button className={styles.simBtn} disabled={busy} onClick={simulate}>
+          Simulate fault (E-471, CM-350 Line 2)
+        </button>
+
+        <h2 className={styles.sectionTitle}>Pending approval</h2>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Machine</th>
+                <th>Fault</th>
+                <th>Root cause</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {pending.length === 0 && (
+                <tr>
+                  <td colSpan={5} className={styles.muted}>Queue empty</td>
+                </tr>
+              )}
+              {pending.map((w) => (
+                <tr key={w.id}>
+                  <td><a className={styles.link} onClick={() => setSelected(w)}>{w.id}</a></td>
+                  <td>{w.machine}</td>
+                  <td>{w.fault_code}</td>
+                  <td className={styles.cause}>{w.root_cause}</td>
+                  <td className={styles.actions}>
+                    <button className={styles.approveBtn} disabled={busy} onClick={() => act(() => api.approve(w.id))}>Approve</button>
+                    <button className={styles.rejectBtn} disabled={busy} onClick={() => act(() => api.reject(w.id))}>Reject</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h2 className={styles.sectionTitle}>All work orders</h2>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Machine</th>
+                <th>Fault</th>
+                <th>Status</th>
+                <th>Assigned</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {all.map((w) => (
+                <tr key={w.id}>
+                  <td><a className={styles.link} onClick={() => setSelected(w)}>{w.id}</a></td>
+                  <td>{w.machine}</td>
+                  <td>{w.fault_code}</td>
+                  <td><Badge status={w.status} /></td>
+                  <td>{w.assigned_to || "-"}</td>
+                  <td>
+                    {w.status === "dispatched" && (
+                      <button className={styles.approveBtn} disabled={busy} onClick={() => act(() => api.recordOutcome(w.id, FIX))}>Mark fixed</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {selected && (
+          <div className={styles.drawer} onClick={() => setSelected(null)}>
+            <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
+              <button className={styles.closeBtn} onClick={() => setSelected(null)}>close</button>
+              <h3 className={styles.panelTitle}>{selected.machine} &mdash; {selected.fault_code}</h3>
+              <a className={styles.pdfLink} href={`/api/work-orders/${selected.id}/pdf`} target="_blank" rel="noreferrer">
+                Download PDF (EN/FR/AR)
+              </a>
+              <p className={styles.cause}>{selected.root_cause}</p>
+              {selected.sources?.length > 0 && (
+                <div className={styles.sources}>
+                  <div className={styles.sourceLabel}>Grounded in</div>
+                  <ul>
+                    {selected.sources.map((s, i) => <li key={i}>{s}</li>)}
+                  </ul>
+                </div>
+              )}
+              {["en", "fr", "ar"].map((lng) =>
+                selected.content?.[lng] ? (
+                  <div key={lng} className={styles.langBlock}>
+                    <div className={styles.langLabel}>{lng.toUpperCase()}</div>
+                    <pre dir={lng === "ar" ? "rtl" : "ltr"}>{selected.content[lng]}</pre>
+                  </div>
+                ) : null
+              )}
+            </div>
+          </div>
+        )}
+
+        <p className={styles.footer}>From fault code to fixed.</p>
+      </div>
     </div>
   );
 }
