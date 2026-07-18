@@ -32,6 +32,9 @@ def _get_pool() -> ConnectionPool:
             max_idle=300,
             kwargs={"row_factory": cast(Any, dict_row), "prepare_threshold": None},
         )
+        import atexit
+
+        atexit.register(_pool.close)
     return _pool
 
 
