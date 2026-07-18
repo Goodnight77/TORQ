@@ -3,8 +3,6 @@
 import asyncio
 import json
 from datetime import datetime, timezone
-from pathlib import Path
-
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
@@ -90,16 +88,14 @@ def work_order(wo_id: str):
 
 @router.get("/work-orders/{wo_id}/pdf")
 def work_order_pdf(wo_id: str):
-    """Download the work-order PDF. Renders it on demand if not generated yet."""
-    wo = models.get(wo_id)
-    if not wo:
-        raise HTTPException(404, "work order not found")
-    path = Path(wo.pdf_path) if wo.pdf_path else None
-    if not path or not path.exists():
-        path = render_pdf(wo)
-        wo.pdf_path = str(path)
-        models.save(wo)
-    return FileResponse(path, media_type="application/pdf", filename=f"work_order_{wo.id}.pdf")
+    """Download the work-order PDF. Served from a disk cache; rendered once on miss."""
+    path = settings.workorder_dir / f"work_order_{wo_id}.pdf"
+    if not path.exists():  # cache miss: fetch once, render, no DB write
+        wo = models.get(wo_id)
+        if not wo:
+            raise HTTPException(404, "work order not found")
+        render_pdf(wo, path)
+    return FileResponse(path, media_type="application/pdf", filename=f"work_order_{wo_id}.pdf")
 
 
 @router.post("/work-orders/{wo_id}/approve")
