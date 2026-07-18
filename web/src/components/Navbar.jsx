@@ -34,9 +34,10 @@ export default function Navbar() {
           <a href="#pipeline" className={styles.link}>Pipeline</a>
           <a href="#features" className={styles.link}>Features</a>
           <a href="#how-it-works" className={styles.link}>How it works</a>
+          <a href="#faq" className={styles.link}>FAQ</a>
+          <Link to="/dashboard" className={styles.link}>{t("navbar.dashboard")}</Link>
         </div>
         <div className={styles.right}>
-          <Link to="/dashboard" className={styles.link}>{t("navbar.dashboard")}</Link>
           <div className={styles.langGroup}>
             {LANGS.map((l) => (
               <button
