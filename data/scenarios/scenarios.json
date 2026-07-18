@@ -1,0 +1,37 @@
+[
+  {
+    "id": "S1",
+    "machine": "CM-350 Line 2",
+    "fault_code": "E-471",
+    "context": "Night shift, 2 a.m. Conveyor motor tripped after several hours running. Ambient warm.",
+    "expected_topic": "motor overtemperature / cooling / PTC"
+  },
+  {
+    "id": "S2",
+    "machine": "CM-350 Line 1",
+    "fault_code": "E-201",
+    "context": "Motor will not start, trips instantly on ramp-up.",
+    "expected_topic": "overcurrent / seized bearing / belt tension"
+  },
+  {
+    "id": "S3",
+    "machine": "PK-9 Line 3",
+    "fault_code": "J-108",
+    "context": "Packaging unit halts mid-run, film not advancing.",
+    "expected_topic": "film feed jam / roller nip / encoder"
+  },
+  {
+    "id": "S4",
+    "machine": "PK-9 Line 3",
+    "fault_code": "J-233",
+    "context": "Seals coming out weak; unit reports temperature timeout.",
+    "expected_topic": "seal temperature low / heater cartridge / thermocouple"
+  },
+  {
+    "id": "S5",
+    "machine": "CM-350 Line 2",
+    "fault_code": "E-471",
+    "context": "Same overtemp trip recurred 3 weeks after last fix on this line.",
+    "expected_topic": "recurring overtemp / lint / prior fix reuse"
+  }
+]

@@ -27,6 +27,14 @@ data/manuals/*
 data/history/*
 !.gitkeep
 
+# --- Confidential drops (never commit) ---
+*.zip
+*.sip
+*.rar
+*.7z
+data/swisstransfer_*
+data/confidential/
+
 # --- Qdrant local storage ---
 qdrant_storage/
 
