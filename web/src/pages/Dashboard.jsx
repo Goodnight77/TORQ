@@ -254,17 +254,17 @@ function SavingsCalculator({ metrics, t }) {
   );
 }
 
-function TrendChart({ data }) {
+function TrendChart({ data, t }) {
   if (!data || data.length === 0) {
     return (
       <div className={styles.card} style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span className={styles.chartEmpty}>No trend data yet</span>
+        <span className={styles.chartEmpty}>{t("dashboard.no_trend_data")}</span>
       </div>
     );
   }
   return (
     <div className={styles.card}>
-      <div className={styles.cardHead}>Time-to-diagnosis / MTTR trend</div>
+      <div className={styles.cardHead}>{t("dashboard.trend")}</div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
@@ -279,17 +279,17 @@ function TrendChart({ data }) {
   );
 }
 
-function FaultsPerMachineChart({ data }) {
+function FaultsPerMachineChart({ data, t }) {
   if (!data || data.length === 0) {
     return (
       <div className={styles.card} style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span className={styles.chartEmpty}>No machine data yet</span>
+        <span className={styles.chartEmpty}>{t("dashboard.no_machine_data")}</span>
       </div>
     );
   }
   return (
     <div className={styles.card}>
-      <div className={styles.cardHead}>Faults per machine</div>
+      <div className={styles.cardHead}>{t("dashboard.faults_per_machine")}</div>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
@@ -615,8 +615,8 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className={styles.grid}>
-            <TrendChart data={trendData} />
-            <FaultsPerMachineChart data={fpmData} />
+            <TrendChart data={trendData} t={t} />
+            <FaultsPerMachineChart data={fpmData} t={t} />
           </div>
         )}
 
