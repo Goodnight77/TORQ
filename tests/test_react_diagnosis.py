@@ -88,10 +88,11 @@ class TestFallback:
 
 
 class TestOneshot:
+    @patch("torq.agent.diagnose.OpenAI")  # avoid needing real credentials on CI
     @patch("torq.agent.diagnose._fetch_history", return_value=[])
     @patch("torq.agent.diagnose._fetch_manuals", return_value=[])
     @patch("torq.agent.diagnose._chat")
-    def test_parses_and_returns_diagnosis(self, mock_chat, _m, _h):
+    def test_parses_and_returns_diagnosis(self, mock_chat, _m, _h, _client):
         mock_chat.return_value = SimpleNamespace(
             choices=[SimpleNamespace(message=_msg('{"root_cause": "worn seal"}'))]
         )
