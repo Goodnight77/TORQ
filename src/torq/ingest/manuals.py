@@ -13,7 +13,7 @@ def _chunk(text: str) -> list[str]:
     buf = ""
     for b in blocks:
         buf = f"{buf}\n\n{b}" if buf else b
-        if len(buf) > 400:  # ponytail: fixed-size heuristic, tune if recall suffers
+        if len(buf) > 400:  # fixed-size heuristic, tune if recall suffers
             chunks.append(buf)
             buf = ""
     if buf:

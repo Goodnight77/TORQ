@@ -1,9 +1,35 @@
-"""Technician routing.
+"""Skill-matched routing: pick the best on-shift technician for a work order."""
 
-Skill-matched routing that selects the best on-shift technician for a work
-order using the shift database and required skills.
-"""
+import json
+from pathlib import Path
 
-# TODO: query on-shift technicians from the shift DB
-# TODO: score candidates by skill match, proximity, and workload
-# TODO: select and return the best-matched technician
+from torq.agent.schemas import WorkOrder
+from torq.config import settings
+
+
+def _load_roster(shifts_file: Path | None = None) -> list[dict]:
+    shifts_file = shifts_file or settings.shifts_file
+    if not shifts_file.exists():
+        return []
+    return json.loads(shifts_file.read_text(encoding="utf-8"))
+
+
+def choose_technician(wo: WorkOrder, roster: list[dict] | None = None) -> dict | None:
+    """Best on-shift technician whose skills cover the required skill.
+
+    Score = skill match first, then fewer skills (more specialised) as a tiebreak.
+    """
+    roster = roster if roster is not None else _load_roster()
+    candidates = [
+        t
+        for t in roster
+        if t.get("on_shift") and wo.required_skill in t.get("skills", [])
+    ]
+    if not candidates:
+        # fall back to any on-shift 'general' tech so a fault is never unassigned
+        candidates = [
+            t for t in roster if t.get("on_shift") and "general" in t.get("skills", [])
+        ]
+    if not candidates:
+        return None
+    return min(candidates, key=lambda t: len(t.get("skills", [])))

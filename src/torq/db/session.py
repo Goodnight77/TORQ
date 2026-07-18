@@ -1,9 +1,15 @@
-"""Database session management.
+"""SQLite connection for the local work-order store.
 
-Sets up the Postgres engine, session factory, and connection lifecycle used
-by the models and application code.
+SQLite keeps this zero-infra; swap to Postgres via DATABASE_URL when
+multi-user/persistence needs it.
 """
 
-# TODO: build engine from config (Postgres URL, pool settings)
-# TODO: session factory + dependency-style session provider
-# TODO: metadata/create-all helper for local/demo bootstrap
+import sqlite3
+
+from torq.config import settings
+
+
+def get_conn() -> sqlite3.Connection:
+    conn = sqlite3.connect(settings.db_path)
+    conn.row_factory = sqlite3.Row
+    return conn

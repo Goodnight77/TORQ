@@ -1,12 +1,17 @@
-"""End-to-end orchestration of the fault -> fix flow.
+"""End-to-end orchestration of the fault -> fix flow."""
 
-Wires together the stages: fault event -> context retrieval -> diagnosis ->
-work-order generation -> supervisor approval -> routing -> dispatch ->
-outcome feedback.
-"""
+from torq.agent.diagnose import diagnose
+from torq.agent.schemas import WorkOrder
+from torq.db import models
+from torq.dispatch import approval
+from torq.workorder.generate import build_work_order
 
-# TODO: define pipeline entrypoint triggered by an incoming fault event
-# TODO: call agent.diagnose with retrieved manual/history context
-# TODO: generate work order + trilingual PDF
-# TODO: enqueue for approval, then route and notify the matched technician
-# TODO: record outcome feedback into the knowledge base
+
+def handle_fault(
+    fault_code: str, machine: str = "", context: str = "", translate: bool = True
+) -> WorkOrder:
+    """Fault event -> diagnosis -> work order -> queued for supervisor approval."""
+    models.init_db()
+    diag = diagnose(fault_code, machine, context)
+    wo = build_work_order(diag, translate=translate)
+    return approval.submit(wo)
