@@ -217,6 +217,7 @@ function ActivityLog() {
         /* ignore malformed frame */
       }
     });
+    es.onerror = () => setEntries((prev) => [...prev, { type: "disconnected", detail: "SSE lost" }]);
     return () => {
       alive = false;
       es.close();
@@ -570,10 +571,14 @@ export default function Dashboard() {
   const [machineDetail, setMachineDetail] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [errored, setErrored] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const inflight = useRef(false);
   const load = useCallback(async () => {
+    if (inflight.current) return;
+    inflight.current = true;
     try {
       const [m, p, a, ev, trend, fpm] = await Promise.all([
         api.getMetrics(),
@@ -590,8 +595,12 @@ export default function Dashboard() {
       setTrendData(trend);
       setFpmData(fpm);
       setLoading(false);
+      setErrored(false);
     } catch (e) {
       setLoading(false);
+      setErrored(true);
+    } finally {
+      inflight.current = false;
     }
   }, []);
 
@@ -656,6 +665,8 @@ export default function Dashboard() {
           <h1 className={styles.heading}>{t("dashboard.title")}</h1>
           <p className={styles.sub}>{t("dashboard.subtitle")}</p>
         </header>
+
+        {errored && <div className="dashboardError">Could not load data — check connection</div>}
 
         <section className={styles.tiles}>
           {loading ? (

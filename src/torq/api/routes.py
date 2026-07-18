@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from torq.config import settings
 from torq.db import models
@@ -19,13 +19,13 @@ router = APIRouter()
 
 
 class MachineIn(BaseModel):
-    id: str
-    model: str
-    location: str
+    id: str = Field(max_length=100)
+    model: str = Field(max_length=200)
+    location: str = Field(max_length=200)
 
 
 class FaultIn(BaseModel):
-    fault_code: str
+    fault_code: str = Field(min_length=1, max_length=50)
     machine: str = ""
     context: str = ""
     translate: bool = True
