@@ -17,6 +17,18 @@ const FIX = {
   time_to_fix_min: 30,
 };
 
+// Varied demo faults across skills (E=electromechanical, J=packaging, C/P/A=general)
+// so repeated clicks exercise different machines and route to different techs.
+const SIM_FAULTS = [
+  { fault_code: "E-471", machine: "CM-350 Line 2", context: "Motor tripped after hours running." },
+  { fault_code: "E-201", machine: "CM-350 Line 1", context: "Overcurrent on start, grinding noise." },
+  { fault_code: "J-108", machine: "PK-9 Line 3", context: "Film feed jammed at the roller nip." },
+  { fault_code: "J-233", machine: "PK-9 Line 3", context: "Seal temperature low, weak seals." },
+  { fault_code: "C-207", machine: "Chiller 6", context: "Condenser water flow dropping, efficiency down." },
+  { fault_code: "P-410", machine: "Pump 3", context: "High vibration and bearing noise." },
+  { fault_code: "A-120", machine: "AHU 2", context: "Filter differential pressure over setpoint." },
+];
+
 function Tile({ label, value }) {
   return (
     <div className={styles.tile}>
@@ -600,11 +612,7 @@ export default function Dashboard() {
 
   const simulate = () =>
     act(
-      () => api.reportFault({
-        fault_code: "E-471",
-        machine: "CM-350 Line 2",
-        context: "Motor tripped after hours running.",
-      }),
+      () => api.reportFault(SIM_FAULTS[Math.floor(Math.random() * SIM_FAULTS.length)]),
       t("dashboard.toast_simulated")
     );
 

@@ -146,7 +146,9 @@ def metrics() -> dict:
     for w in wos:
         by_status[w.status] = by_status.get(w.status, 0) + 1
 
-    ttd = [s for w in wos if (s := _secs(w.fault_arrived_at, w.dispatched_at)) is not None]
+    # Diagnosis latency = fault arrival -> work order created (the AI step).
+    # Not -> dispatched_at, which also includes the human approval wait.
+    ttd = [s for w in wos if (s := _secs(w.fault_arrived_at, w.created_at)) is not None]
     resolved = [w for w in wos if w.status == "resolved"]
     ttf = [
         float(w.outcome["time_to_fix_min"])
@@ -194,3 +196,44 @@ def metrics() -> dict:
         "resolution_rate": round(len(resolved) / len(wos), 2) if wos else None,
         "machine_downtime": machine_downtime,
     }
+
+
+def trend(days: int = 7) -> list[dict]:
+    """Per-day avg diagnosis latency (min) and MTTR (min) for the recent window."""
+    buckets: dict[str, dict[str, list[float]]] = {}
+    for w in list_all():
+        if not w.created_at:
+            continue
+        day = w.created_at[:10]
+        b = buckets.setdefault(day, {"diag": [], "mttr": []})
+        d = _secs(w.fault_arrived_at, w.created_at)
+        if d is not None:
+            b["diag"].append(d / 60)
+        if w.status == "resolved":
+            fix = _downtime_min(w)
+            if fix is not None:
+                b["mttr"].append(fix)
+
+    rows = []
+    for day in sorted(buckets)[-days:]:
+        b = buckets[day]
+        rows.append(
+            {
+                "label": day[5:],  # MM-DD
+                "diagnosis": round(sum(b["diag"]) / len(b["diag"]), 1) if b["diag"] else 0,
+                "mttr": round(sum(b["mttr"]) / len(b["mttr"]), 1) if b["mttr"] else 0,
+            }
+        )
+    return rows
+
+
+def faults_per_machine() -> list[dict]:
+    """Count of work orders per machine, most faults first."""
+    counts: dict[str, int] = {}
+    for w in list_all():
+        if w.machine:
+            counts[w.machine] = counts.get(w.machine, 0) + 1
+    return [
+        {"machine": m, "count": c}
+        for m, c in sorted(counts.items(), key=lambda kv: -kv[1])
+    ]

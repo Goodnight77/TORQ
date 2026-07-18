@@ -130,6 +130,18 @@ def metrics():
     return models.metrics()
 
 
+@router.get("/metrics/trend")
+def metrics_trend():
+    """Per-day diagnosis latency + MTTR for the trend chart."""
+    return models.trend()
+
+
+@router.get("/metrics/faults-per-machine")
+def metrics_faults_per_machine():
+    """Work-order count per machine for the bar chart."""
+    return models.faults_per_machine()
+
+
 @router.get("/events/stream")
 async def event_stream(request: Request):
     """SSE endpoint: streams incoming MachineFaultEvent in real-time."""
