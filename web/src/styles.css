@@ -51,6 +51,7 @@ button.sim { background: #1f6feb; color: #fff; margin: 4px 0 8px; }
 .panel { width: min(560px, 92vw); height: 100%; background: var(--card); border-left: 1px solid var(--line); padding: 24px; overflow-y: auto; }
 .panel h3 { margin: 8px 0; }
 .close { background: #23303a; color: var(--text); float: right; }
+.pdf { display: inline-block; margin: 6px 0 10px; color: var(--green); font-size: 13px; font-weight: 600; }
 .sources { margin: 14px 0; }
 .sources ul { margin: 4px 0 0; padding-left: 18px; }
 .sources li { color: var(--mute); font-size: 13px; margin: 2px 0; }
