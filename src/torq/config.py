@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     history_file: Path = ROOT / "data" / "history" / "repairs.json"
     scenarios_file: Path = ROOT / "data" / "scenarios" / "scenarios.json"
     shifts_file: Path = ROOT / "data" / "shifts.json"
+    eval_results_file: Path = ROOT / "data" / "eval_results.json"
 
     # Collections
     manuals_collection: str = "torq_manuals"

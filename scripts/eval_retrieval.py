@@ -57,6 +57,7 @@ def main() -> None:
 
     print(f"{'config':<18}{'Hit@3':>8}{'Hit@5':>8}{'MRR':>8}")
     print("-" * 42)
+    results = []
     for name, flags in CONFIGS:
         settings.use_hybrid = flags["use_hybrid"]
         settings.use_rerank = flags["use_rerank"]
@@ -70,9 +71,23 @@ def main() -> None:
                 hit3 += r <= 3
                 hit5 += r <= 5
         n = len(labeled)
+        results.append(
+            {
+                "config": name,
+                "hit_at_3": round(hit3 / n, 3),
+                "hit_at_5": round(hit5 / n, 3),
+                "mrr": round(mrr / n, 3),
+            }
+        )
         print(f"{name:<18}{hit3/n:>8.2f}{hit5/n:>8.2f}{mrr/n:>8.3f}")
 
-    print("\nA->B shows hybrid's effect; B->C shows reranking's effect.")
+    settings.eval_results_file.write_text(
+        json.dumps({"metric": "manual retrieval", "scenarios": len(labeled), "configs": results},
+                   indent=2),
+        encoding="utf-8",
+    )
+    print(f"\nWrote {settings.eval_results_file}")
+    print("A->B shows hybrid's effect; B->C shows reranking's effect.")
 
 
 if __name__ == "__main__":

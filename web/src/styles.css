@@ -27,6 +27,14 @@ h2 { font-size: 15px; color: var(--mute); margin: 28px 0 8px; text-transform: up
 .tile b { display: block; font-size: 28px; color: var(--green); }
 .tile small { color: var(--mute); }
 
+.evalcard { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.evalhead { color: var(--mute); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px; }
+.evalrow { display: flex; align-items: center; gap: 12px; margin: 6px 0; }
+.evallabel { width: 140px; font-size: 13px; }
+.evalbar { flex: 1; height: 14px; background: var(--bg); border-radius: 7px; overflow: hidden; }
+.evalbar i { display: block; height: 100%; background: var(--green); border-radius: 7px; }
+.evalval { width: 48px; text-align: right; font-size: 13px; color: var(--green); font-weight: 600; }
+
 table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; }
 th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top; }
 th { color: var(--mute); font-weight: 600; }

@@ -8,6 +8,7 @@ async function j(path, opts) {
 }
 
 export const getMetrics = () => j("/metrics");
+export const getEval = () => j("/eval");
 export const getWorkOrders = (status) =>
   j("/work-orders" + (status ? `?status=${status}` : ""));
 
