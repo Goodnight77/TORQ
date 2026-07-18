@@ -4,6 +4,11 @@
   padding: 80px 24px 28px;
 }
 
+[data-theme="dark"] .footer,
+:root:not([data-theme="light"]):not([data-theme="dark"]) .footer {
+  background: #1a1a1a;
+}
+
 .inner {
   max-width: 1200px;
   margin: 0 auto;
