@@ -308,6 +308,15 @@ function Drawer({ workOrder, onClose }) {
           </div>
         )}
 
+        {w.investigation?.length > 0 && (
+          <details className={styles.investigation}>
+            <summary>Agent investigation ({w.investigation.length} steps)</summary>
+            <ol>
+              {w.investigation.map((s, i) => <li key={i}>{s}</li>)}
+            </ol>
+          </details>
+        )}
+
         {["en", "fr", "ar"].map((lng) =>
           w.content?.[lng] ? (
             <div key={lng} className={styles.langBlock}>

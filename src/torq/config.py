@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_base_url: str = "https://api.deepseek.com"
     llm_model: str = "deepseek-reasoner"
+    # Model for the multi-step (ReAct) agent. Needs tool-calling support, which
+    # the reasoner model lacks, so default to the chat model.
+    agent_model: str = "deepseek-chat"
+    agent_max_steps: int = 8  # reason/act ceiling; generous so the agent answers vs erroring into fallback
 
     # Vector DB (Qdrant)
     qdrant_url: str = ""

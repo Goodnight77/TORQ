@@ -565,6 +565,36 @@
   transition: color 0.35s;
 }
 
+.investigation {
+  margin: 20px 0;
+}
+
+.investigation summary {
+  color: var(--text-muted);
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.35s;
+}
+
+.investigation ol {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.investigation li {
+  color: var(--text-muted);
+  font-family: "ALTGumbo", system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 4px 0;
+  transition: color 0.35s;
+}
+
 .langBlock {
   margin: 20px 0;
 }

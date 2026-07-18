@@ -19,6 +19,7 @@ class Diagnosis(BaseModel):
     tools: list[str] = []
     safety_warnings: list[str] = []
     sources: list[str] = []
+    investigation: list[str] = []  # ordered retrieval steps the agent took
 
 
 class WorkOrder(BaseModel):
@@ -32,6 +33,7 @@ class WorkOrder(BaseModel):
     safety_warnings: list[str] = []
     required_skill: str = "general"
     sources: list[str] = []  # manual sections + past repairs the diagnosis cited
+    investigation: list[str] = []  # ordered retrieval steps the agent took
     content: dict[str, str] = {}  # language code (fr/ar/en) -> formatted text
     status: str = "pending"  # pending | approved | rejected | dispatched | resolved | failed
     assigned_to: str | None = None
