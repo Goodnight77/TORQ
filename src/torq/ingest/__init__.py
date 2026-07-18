@@ -6,6 +6,7 @@ fused with RRF), optionally reranked with a cross-encoder, and can be filtered b
 payload fields (machine, fault_code).
 """
 
+from datetime import datetime, timezone
 from functools import lru_cache
 
 from fastembed import SparseTextEmbedding, TextEmbedding
@@ -14,7 +15,17 @@ from qdrant_client import QdrantClient, models
 
 from torq.config import settings
 
-_FILTER_FIELDS = ("machine", "fault_code")
+# Payload fields we index so they are cheap to filter or score-boost on.
+# `date`/`indexed_at` are datetimes (recency boosting); the rest are keywords.
+# Indexing a field a collection does not carry yet is harmless: only points that
+# have it get indexed.
+_PAYLOAD_INDEXES = {
+    "machine": models.PayloadSchemaType.KEYWORD,
+    "fault_code": models.PayloadSchemaType.KEYWORD,
+    "outcome": models.PayloadSchemaType.KEYWORD,
+    "date": models.PayloadSchemaType.DATETIME,
+    "indexed_at": models.PayloadSchemaType.DATETIME,
+}
 
 
 @lru_cache(maxsize=1)
@@ -78,19 +89,20 @@ def index_docs(collection: str, docs: list[str], payloads: list[dict]) -> int:
         },
         sparse_vectors_config={"bm25": models.SparseVectorParams(modifier=models.Modifier.IDF)},
     )
-    for field in _FILTER_FIELDS:
+    for field, schema in _PAYLOAD_INDEXES.items():
         try:
-            client.create_payload_index(collection, field, models.PayloadSchemaType.KEYWORD)
+            client.create_payload_index(collection, field, schema)
         except Exception:  # noqa: BLE001 - index is an optimization, not required
             pass
 
+    now = datetime.now(timezone.utc).isoformat()
     client.upsert(
         collection_name=collection,
         points=[
             models.PointStruct(
                 id=i,
                 vector={"dense": dense[i], "bm25": sparse[i]},
-                payload={**payloads[i], "document": docs[i]},
+                payload={**payloads[i], "document": docs[i], "indexed_at": now},
             )
             for i in range(len(docs))
         ],
