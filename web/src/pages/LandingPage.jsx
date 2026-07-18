@@ -25,7 +25,7 @@ const features = [
   },
   {
     icon: <IconRefresh />,
-    title: "Self-Learning",
+    title: "Self Learning",
     description: "Every fix enriches the knowledge base. The model gets smarter with each resolved fault.",
   },
 ];
@@ -111,13 +111,13 @@ export default function LandingPage() {
         <div className={styles.heroBg} />
         <div className={styles.heroGrid} />
         <div className={styles.heroContent}>
-          <span className={styles.heroBadge}>Fault-to-Fix Engine</span>
+          <span className={styles.heroBadge}>Fault to Fix Engine</span>
           <h1 className={styles.heroTitle}>
             From fault code<br />
             <span className={styles.heroTitleAccent}>to fixed.</span>
           </h1>
           <p className={styles.heroDesc}>
-            TORQ autonomously diagnoses machine faults, generates trilingual work orders, and dispatches the right technician &mdash; all in real time.
+            TORQ autonomously diagnoses machine faults, generates trilingual work orders, and dispatches the right technician all in real time.
           </p>
           <div className={styles.heroCta}>
             <Link to="/dashboard" className={styles.btnPrimary}>
@@ -166,8 +166,8 @@ export default function LandingPage() {
       {/* ── Pipeline ── */}
       <section className={styles.pipelineSection} id="pipeline" ref={pipelineRef}>
         <div className={styles.sectionInner}>
-          <SectionTitle subtitle="From fault event to resolved work order — entirely automated.">
-            Pipeline
+          <SectionTitle subtitle="From fault event to resolved work order entirely automated.">
+            How TORQ drives the repair
           </SectionTitle>
           <div className={`${styles.fadeUp} ${pipelineVisible ? styles.fadeUpVisible : ""}`}>
             <PipelineDiagram />
