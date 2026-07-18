@@ -29,17 +29,12 @@ class Settings(BaseSettings):
         if not self.llm_api_key:
             self.llm_api_key = os.environ.get("OPENAI_API_KEY", "")
         if not self.llm_api_key:
-            print("=" * 60)
-            print("  FATAL: No LLM API key found.")
-            print()
-            print("  Set LLM_API_KEY or OPENAI_API_KEY in your .env file")
-            print("  or export it as an environment variable.")
-            print()
-            print("  Example:")
-            print("    LLM_API_KEY=sk-...  # DeepSeek (default)")
-            print("    OPENAI_API_KEY=sk-...  # OpenAI-compatible")
-            print("=" * 60)
-            sys.exit(1)
+            import logging
+            logging.warning(
+                "No LLM API key found. "
+                "Set LLM_API_KEY or OPENAI_API_KEY in your .env file. "
+                "LLM-dependent features (diagnosis, translation) will fall back."
+            )
         return self
 
     # Vector DB (Qdrant)
