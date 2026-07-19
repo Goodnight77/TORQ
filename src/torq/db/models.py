@@ -1,7 +1,7 @@
 """Persistence for work orders and the machine registry."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from torq.agent.schemas import WorkOrder
@@ -120,6 +120,25 @@ def list_all() -> list[WorkOrder]:
     with get_conn() as conn:
         rows = conn.execute("SELECT data FROM work_orders ORDER BY rowid").fetchall()
     return [WorkOrder.model_validate_json(r["data"]) for r in rows]
+
+
+def find_recent(machine: str, fault_code: str, window_sec: int = 30) -> WorkOrder | None:
+    """Return the most recent work order for (machine, fault_code) within window_sec, if any."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT data FROM work_orders WHERE machine = ? AND fault_code = ? ORDER BY rowid DESC LIMIT 1",
+            (machine, fault_code),
+        ).fetchall()
+    if not rows:
+        return None
+    wo = WorkOrder.model_validate_json(rows[0]["data"])
+    if not wo.created_at:
+        return None
+    try:
+        age = (datetime.now(timezone.utc) - datetime.fromisoformat(wo.created_at)).total_seconds()
+    except ValueError:
+        return None
+    return wo if age <= window_sec else None
 
 
 def _secs(start: str | None, end: str | None) -> float | None:

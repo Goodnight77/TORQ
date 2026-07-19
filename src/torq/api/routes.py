@@ -19,6 +19,8 @@ from torq.workorder.pdf import render_pdf
 
 router = APIRouter()
 
+_FAULT_CODES_CACHE: list[dict[str, str]] | None = None
+
 
 class MachineIn(BaseModel):
     id: str = Field(max_length=100)
@@ -31,6 +33,7 @@ class FaultIn(BaseModel):
     machine: str = ""
     context: str = ""
     translate: bool = True
+    source: str = "manual"
 
 
 class OutcomeIn(BaseModel):
@@ -53,6 +56,31 @@ def machine(machine_id: str) -> dict[str, Any]:
     return registered
 
 
+@router.get("/fault-codes")
+def fault_codes() -> list[dict[str, str]]:
+    """Return known fault codes from the scenarios file — used by the operator report form."""
+    global _FAULT_CODES_CACHE
+    if _FAULT_CODES_CACHE is not None:
+        return _FAULT_CODES_CACHE
+    try:
+        scenarios = json.loads(settings.scenarios_file.read_text(encoding="utf-8"))
+        seen: set[str] = set()
+        result: list[dict[str, str]] = []
+        for s in scenarios:
+            code = s.get("fault_code", "").strip()
+            if code and code not in seen:
+                seen.add(code)
+                result.append({
+                    "fault_code": code,
+                    "machine": s.get("machine", ""),
+                    "description": s.get("expected_topic", ""),
+                })
+        _FAULT_CODES_CACHE = result
+        return result
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
 @router.post("/machines", status_code=201)
 def create_machine(machine: MachineIn) -> dict[str, Any]:
     machine_id = machine.id.strip()
@@ -71,7 +99,7 @@ def report_fault(f: FaultIn) -> WorkOrder:
     arrival = datetime.now(timezone.utc).isoformat()
     return handle_fault(
         f.fault_code, f.machine, f.context,
-        translate=f.translate, fault_arrived_at=arrival,
+        translate=f.translate, fault_arrived_at=arrival, source=f.source,
     )
 
 
@@ -280,13 +308,14 @@ async def _check_twilio() -> bool:
         return False
 
 
-async def _check_mqtt() -> bool:
-    if live.mqtt_client is None:
-        return False
+async def _check_mqtt() -> dict[str, bool]:
+    configured = bool(settings.mqtt_broker_url)
+    if not configured:
+        return {"configured": False, "connected": False}
     try:
-        return live.mqtt_client.is_connected()
+        return {"configured": True, "connected": live.mqtt_client is not None and live.mqtt_client.is_connected()}
     except Exception:
-        return False
+        return {"configured": True, "connected": False}
 
 
 @router.get("/health")
@@ -302,7 +331,7 @@ async def health_check() -> dict[str, Any]:
     qdrant_ok = await qdrant_task
     llm_ok = await llm_task
     twilio_ok = await twilio_task
-    mqtt_ok = await mqtt_task
+    mqtt_status = await mqtt_task
 
     overall_healthy = db_ok
 
@@ -324,9 +353,9 @@ async def health_check() -> dict[str, Any]:
                 "connected": twilio_ok,
             },
             "mqtt_broker": {
-                "connected": mqtt_ok,
-                "broker": settings.mqtt_broker_url,
-                "fallbacks_active": settings.enable_fallbacks,
+                "configured": mqtt_status["configured"],
+                "connected": mqtt_status["connected"],
+                "broker": settings.mqtt_broker_url if settings.mqtt_broker_url else "(not configured)",
             },
         },
     }

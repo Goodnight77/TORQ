@@ -6,6 +6,8 @@ Run:  uv run uvicorn torq.api.main:app --reload
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -24,9 +26,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     models.init_db()
     mqtt_client = None
-    if settings.enable_fallbacks:
-        print("[MQTT] fallbacks enabled, skipping broker connection")
-    else:
+    if settings.mqtt_broker_url:
         mqtt_client = listener.build_client()
         live.mqtt_client = mqtt_client
         try:
@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 keepalive=60,
             )
             mqtt_client.loop_start()
-            print("[MQTT] background listener started")
+            print(f"[MQTT] listening on {settings.mqtt_broker_url}:{settings.mqtt_port}")
         except Exception as exc:
             print(f"[MQTT] broker unreachable ({exc}), continuing without live feed")
             mqtt_client = None
@@ -62,6 +62,11 @@ app.include_router(router, prefix="/api")
 @app.get("/", response_class=HTMLResponse)
 def dashboard() -> str:
     return DASHBOARD_HTML
+
+
+@app.get("/operator/report", response_class=HTMLResponse)
+def operator_report() -> str:
+    return Path(__file__).parent.parent.joinpath("operator", "report.html").read_text(encoding="utf-8")
 
 
 DASHBOARD_HTML = r"""
@@ -101,7 +106,7 @@ DASHBOARD_HTML = r"""
 </style></head><body>
 <header>
   <h1>TORQ <span>Fault-to-Fix</span> &mdash; Supervisor Dashboard</h1>
-  <span class="mqtt-status"><span class="status-dot disconnected" id="mqtt-dot"></span> MQTT <span id="mqtt-label">disconnected</span></span>
+  <span class="mqtt-status" id="mqtt-status"></span>
 </header>
 <main>
   <div class="tiles" id="tiles"></div>
@@ -109,7 +114,10 @@ DASHBOARD_HTML = r"""
   <h2>&#9889; LIVE FAULT FEED</h2>
   <div id="live-feed"><div class="feed-empty">Waiting for faults&hellip;</div></div>
 
-  <button class="sim" onclick="simulate()">&#9889; Simulate fault (E-471, CM-350 Line 2)</button>
+  <div style="background:#111c28;border:1px solid #223;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <a href="/operator/report" target="_blank" style="color:#e6edf3;font-size:14px;font-weight:700;text-decoration:none;background:#1f6feb;padding:8px 16px;border-radius:6px">&#128241; Report a fault (open on phone)</a>
+    <span style="color:#8b98a5;font-size:13px">Select machine → enter fault code → submitted</span>
+  </div>
   <h2>PENDING APPROVAL</h2><table id="pending"></table>
   <h2>ALL WORK ORDERS</h2><table id="all"></table>
 </main>
@@ -118,11 +126,6 @@ const api = p => fetch('/api'+p).then(r=>r.json());
 const post = p => fetch('/api'+p,{method:'POST'}).then(r=>r.json());
 const esc = s => String(s).replace(/[&<>"]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]||m});
 
-async function simulate(){
-  await fetch('/api/faults',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({fault_code:'E-471',machine:'CM-350 Line 2',context:'Motor tripped after hours running.'})});
-  load();
-}
 async function approve(id){await post('/work-orders/'+id+'/approve');load();}
 async function reject(id){await post('/work-orders/'+id+'/reject');load();}
 async function resolve(id){
@@ -186,5 +189,18 @@ async function load(){
       '<td>'+(w.status==='dispatched'?'<button onclick="resolve(\''+w.id+'\')">Mark fixed</button>':'')+'</td></tr>').join('');
 }
 load(); setInterval(load, 4000);
+
+// Show MQTT status (configured/connected/not configured)
+fetch('/api/health').then(r=>r.json()).then(h=>{
+  const m = h.integrations?.mqtt_broker || {};
+  const el = document.getElementById('mqtt-status');
+  if (!m.configured) {
+    el.innerHTML = '<span style="opacity:0.4">MQTT — not configured</span>';
+  } else {
+    const dot = m.connected ? 'connected' : 'disconnected';
+    const label = m.connected ? 'connected' : 'disconnected';
+    el.innerHTML = '<span class="status-dot '+dot+'"></span> MQTT <span>'+label+'</span>';
+  }
+}).catch(()=>{});
 </script></body></html>
 """

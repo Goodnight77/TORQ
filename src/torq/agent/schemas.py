@@ -38,6 +38,7 @@ class WorkOrder(BaseModel):
     status: str = "pending"  # pending | approved | rejected | dispatched | resolved | failed
     assigned_to: str | None = None
     confidence: float = 0.5
+    source: str = "manual"
     fault_arrived_at: str | None = None
     created_at: str = Field(default_factory=_now)
     dispatched_at: str | None = None

@@ -43,4 +43,6 @@ export const recordOutcome = (id, body) =>
     body: JSON.stringify(body),
   });
 
+export const getMachines = () => j("/machines").catch(() => []);
+
 export const getHealth = () => j("/health").catch(() => null);
