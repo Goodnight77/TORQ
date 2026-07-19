@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(title="TORQ - Fault-to-Fix Engine", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # dev: allow the SPA dev server
+    allow_origins=settings.cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

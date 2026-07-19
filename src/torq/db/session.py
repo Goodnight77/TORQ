@@ -7,7 +7,7 @@ set, TORQ keeps using the local SQLite database.
 import re
 import sqlite3
 from types import TracebackType
-from typing import Any, LiteralString, Self, cast
+from typing import Any, Self, cast
 
 import psycopg
 from psycopg.rows import dict_row
@@ -79,7 +79,7 @@ class _PostgresConnection:
         return self._pool_connection.__exit__(exc_type, exc_value, traceback)
 
     def execute(self, sql: str, parameters: tuple[Any, ...] = ()) -> Any:
-        query = cast(LiteralString, _postgres_sql(sql))
+        query = _postgres_sql(sql)
         return self._connection.execute(query, parameters)
 
 

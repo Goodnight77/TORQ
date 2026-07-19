@@ -281,7 +281,7 @@ async def _check_twilio() -> bool:
 
 
 async def _check_mqtt() -> bool:
-    if settings.enable_fallbacks or live.mqtt_client is None:
+    if live.mqtt_client is None:
         return False
     try:
         return live.mqtt_client.is_connected()

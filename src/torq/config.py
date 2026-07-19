@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     mqtt_port: int = 1883
     mqtt_topic: str = "torq/demo/faults"
 
+    # CORS: comma-separated origins or "*" for any (dev default).
+    cors_origins: list[str] = ["*"]
+
     # Work-order store. DATABASE_URL selects Postgres; SQLite is the local fallback.
     database_url: str = ""
     db_path: Path = ROOT / "data" / "torq.db"

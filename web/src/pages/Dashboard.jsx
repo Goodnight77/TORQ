@@ -241,8 +241,8 @@ function ActivityLog({ t }) {
         <div className={styles.feedEmpty}>{t("dashboard.no_activity")}</div>
       ) : (
         <div className={styles.activityList}>
-          {rows.map((e, i) => (
-            <div key={i} className={styles.activityRow}>
+          {rows.map((e) => (
+            <div key={e.ts || e.machine + e.fault_code} className={styles.activityRow}>
               <span className={styles.activityTime}>{clockTime(e.ts)}</span>
               <span className={`${styles.activityStage} ${styles[e.stage] || ""}`}>
                 {stageLabel(e.stage, t)}
@@ -303,15 +303,15 @@ function SavingsCalculator({ metrics, t }) {
         <div className={styles.calcInputs}>
           <label>
             <span>{t("dashboard.faults_per_week")}</span>
-            <input type="number" value={faults} onChange={e => setFaults(Number(e.target.value))} />
+            <input type="number" min="0" value={faults} onChange={e => setFaults(Number(e.target.value))} />
           </label>
           <label>
             <span>{t("dashboard.downtime_cost")}</span>
-            <input type="number" value={cost} onChange={e => setCost(Number(e.target.value))} />
+            <input type="number" min="0" value={cost} onChange={e => setCost(Number(e.target.value))} />
           </label>
           <label>
             <span>{t("dashboard.baseline_mttr")}</span>
-            <input type="number" value={baseline} onChange={e => setBaseline(Number(e.target.value))} />
+            <input type="number" min="0" value={baseline} onChange={e => setBaseline(Number(e.target.value))} />
           </label>
         </div>
         <div className={styles.calcOutputs}>
@@ -429,7 +429,7 @@ function Drawer({ workOrder, onClose, onNotify, busy, t }) {
           <ConfidenceBadge confidence={w.confidence} t={t} />
         </div>
 
-        <a className={styles.pdfLink} href={`/api/work-orders/${w.id}/pdf`} target="_blank" rel="noreferrer">
+        <a className={styles.pdfLink} href={`${api.BASE}/work-orders/${w.id}/pdf`} target="_blank" rel="noreferrer">
           {t("dashboard.download_pdf")}
         </a>
 

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+
 import styles from "./Footer.module.css";
 import FAQ from "./FAQ.jsx";
 import { useI18n } from "../i18n";
@@ -11,10 +11,10 @@ export default function Footer() {
         <div className={styles.grid}>
           <div className={styles.col}>
             <h4 className={styles.heading}>{t("footer.product")}</h4>
-            <Link to="/" className={styles.link}>{t("footer.features")}</Link>
-            <Link to="/" className={styles.link}>{t("footer.pipeline")}</Link>
-            <Link to="/" className={styles.link}>{t("footer.how_it_works")}</Link>
-            <Link to="/dashboard" className={styles.link}>{t("footer.dashboard")}</Link>
+            <a href="/#features" className={styles.link}>{t("footer.features")}</a>
+            <a href="/#pipeline" className={styles.link}>{t("footer.pipeline")}</a>
+            <a href="/#how_it_works" className={styles.link}>{t("footer.how_it_works")}</a>
+            <a href="/dashboard" className={styles.link}>{t("footer.dashboard")}</a>
           </div>
           <div className={styles.col}>
             <h4 className={styles.heading}>{t("footer.use_cases")}</h4>

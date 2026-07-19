@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 
 const LOCALES = {
   en: {
@@ -628,8 +628,14 @@ export const I18nContext = createContext();
 
 export function I18nProvider({ children }) {
   const [locale, setLocale] = useState(() => {
-    return localStorage.getItem("torq-lang") || "en";
+    const stored = localStorage.getItem("torq-lang") || "en";
+    return Object.keys(LOCALES).includes(stored) ? stored : "en";
   });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("lang", locale);
+    document.documentElement.setAttribute("dir", locale === "ar" ? "rtl" : "ltr");
+  }, [locale]);
 
   const t = useCallback((key) => {
     return LOCALES[locale]?.[key] ?? LOCALES.en[key] ?? key;

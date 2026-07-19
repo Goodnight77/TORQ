@@ -211,13 +211,7 @@ def _diagnose_oneshot(fault_code: str, machine: str, context: str) -> Diagnosis:
         {"role": "user", "content": build_user_prompt(fault_code, machine, context, manuals_txt, history_txt)},
     ]
     resp = _chat(client, messages)
-    try:
-        data = _parse_json(resp.choices[0].message.content)
-    except (json.JSONDecodeError, ValueError):
-        # one retry with a stricter nudge for valid JSON
-        messages.append({"role": "user", "content": "Return ONLY the JSON object, no prose or fences."})
-        resp = _chat(client, messages)
-        data = _parse_json(resp.choices[0].message.content)
+    data = _parse_json(resp.choices[0].message.content)
 
     _merge_sources(data, m_src + h_src)
     data["investigation"] = steps

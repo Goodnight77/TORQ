@@ -13,6 +13,10 @@ export default class ErrorBoundary extends Component {
     return { error };
   }
 
+  componentDidCatch(error, info) {
+    console.error("ErrorBoundary caught:", error, info);
+  }
+
   render() {
     if (this.state.error) {
       const { t } = this.context;
