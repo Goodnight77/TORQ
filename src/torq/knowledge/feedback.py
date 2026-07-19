@@ -1,11 +1,15 @@
 """Capture a technician's repair outcome and feed it back into the knowledge base."""
 
 import json
+import threading
+from typing import Any
 
 from torq.agent.schemas import WorkOrder, _now
 from torq.config import settings
 from torq.db import models
-from torq.ingest.history import ingest_history
+from torq.ingest.history import upsert_history_record
+
+_FILE_LOCK = threading.Lock()
 
 
 def _append_to_history(wo: WorkOrder) -> None:
@@ -25,10 +29,11 @@ def _append_to_history(wo: WorkOrder) -> None:
         "time_to_fix_min": o.get("time_to_fix_min"),
     }
     path = settings.history_file
-    records = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
-    records.append(record)
-    path.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
-    ingest_history()  # re-embed history so the new fix is retrievable
+    with _FILE_LOCK:
+        records = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+        records.append(record)
+        path.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
+    upsert_history_record(record)  # incrementally index this new repair in Qdrant
 
 
 def record_outcome(
@@ -37,6 +42,7 @@ def record_outcome(
     actual_fix: str = "",
     notes: str = "",
     time_to_fix_min: float | None = None,
+    background_tasks: Any = None,
 ) -> WorkOrder | None:
     wo = models.get(wo_id)
     if not wo:
@@ -51,5 +57,8 @@ def record_outcome(
     wo.status = "resolved" if resolved else "failed"
     models.save(wo)
     if resolved:
-        _append_to_history(wo)
+        if background_tasks is not None:
+            background_tasks.add_task(_append_to_history, wo)
+        else:
+            _append_to_history(wo)
     return wo

@@ -29,5 +29,13 @@ def ingest_history(history_file: Path | None = None) -> int:
     return index_docs(settings.history_collection, docs, payloads)
 
 
+def upsert_history_record(record: dict) -> None:
+    """Index a single repair record."""
+    from torq.ingest import upsert_document
+    doc = _record_to_text(record)
+    doc_id = record.get("id") or "WO-unknown"
+    upsert_document(settings.history_collection, doc_id, doc, record)
+
+
 if __name__ == "__main__":
     print(f"Indexed {ingest_history()} repair records.")

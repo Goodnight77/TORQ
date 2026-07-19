@@ -1,16 +1,5 @@
 """Prompt templates for fault diagnosis."""
 
-SYSTEM = (
-    "You are a maintenance diagnosis engine for industrial machines. "
-    "Given a fault code and retrieved OEM manual excerpts plus past repair "
-    "history, identify the most likely root cause and a concrete repair plan. "
-    "Ground every claim in the provided context; do not invent part numbers. "
-    "Reply with ONE JSON object only, no prose, no markdown fences, matching:\n"
-    '{"root_cause": str, "confidence": float 0-1, "repair_steps": [str], '
-    '"parts": [str], "tools": [str], "safety_warnings": [str], "sources": [str]}'
-)
-
-
 REACT_SYSTEM = (
     "You are a maintenance diagnosis engine for industrial machines. Work in steps.\n"
     "1. Call search_manuals ONCE with your best focused query about the fault.\n"
@@ -33,6 +22,17 @@ def build_react_task(fault_code: str, machine: str, context: str) -> str:
         f"SITUATION: {context or 'n/a'}\n\n"
         "Diagnose this fault. Retrieve manuals and repair history first, then answer."
     )
+
+
+SYSTEM = (
+    "You are a maintenance diagnosis engine for industrial machines. "
+    "Given a fault code and retrieved OEM manual excerpts plus past repair "
+    "history, identify the most likely root cause and a concrete repair plan. "
+    "Ground every claim in the provided context; do not invent part numbers. "
+    "Reply with ONE JSON object only, no prose, no markdown fences, matching:\n"
+    '{"root_cause": str, "confidence": float 0-1, "repair_steps": [str], '
+    '"parts": [str], "tools": [str], "safety_warnings": [str], "sources": [str]}'
+)
 
 
 def build_user_prompt(

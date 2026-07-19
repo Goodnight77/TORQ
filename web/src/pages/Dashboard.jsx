@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useRef, useDeferredValue } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip,
   ResponsiveContainer, CartesianGrid,
@@ -617,7 +617,6 @@ export default function Dashboard() {
   const [errored, setErrored] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const deferredQuery = useDeferredValue(searchQuery);
 
   const inflight = useRef(false);
   const load = useCallback(async () => {
@@ -694,8 +693,8 @@ export default function Dashboard() {
     if (statusFilter) {
       list = list.filter((w) => w.status === statusFilter);
     }
-    if (deferredQuery) {
-      const q = deferredQuery.toLowerCase();
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
       list = list.filter((w) =>
         (w.machine || "").toLowerCase().includes(q) ||
         (w.fault_code || "").toLowerCase().includes(q) ||

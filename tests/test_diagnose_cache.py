@@ -52,12 +52,15 @@ class DiagnoseCacheTests(unittest.TestCase):
         self.assertEqual(self.mock_diag.call_count, 2)  # context busts the cache
 
     def test_expired_entry_recomputes(self) -> None:
-        diag_mod.diagnose("E-201", "CM-350")
-        # Force the cached entry to look expired.
-        key = ("CM-350", "E-201", "")
-        _exp, diag = diag_mod._CACHE[key]
-        diag_mod._CACHE[key] = (time.monotonic() - 1, diag)
-        diag_mod.diagnose("E-201", "CM-350")
+        from cachetools import TTLCache
+        orig = diag_mod._CACHE
+        diag_mod._CACHE = TTLCache(maxsize=256, ttl=0.1)
+        try:
+            diag_mod.diagnose("E-201", "CM-350")
+            time.sleep(0.15)
+            diag_mod.diagnose("E-201", "CM-350")
+        finally:
+            diag_mod._CACHE = orig
         self.assertEqual(self.mock_diag.call_count, 2)
 
     def test_cache_copy_isolation(self) -> None:

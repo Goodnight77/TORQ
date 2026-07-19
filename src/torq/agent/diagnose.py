@@ -11,16 +11,11 @@ calling ``ingest.search`` directly.
 
 import json
 import logging
-import time
 
+from cachetools import TTLCache
 from openai import OpenAI
 
-from torq.agent.prompts import (
-    REACT_SYSTEM,
-    SYSTEM,
-    build_react_task,
-    build_user_prompt,
-)
+from torq.agent.prompts import REACT_SYSTEM, SYSTEM, build_react_task, build_user_prompt
 from torq.agent.schemas import Diagnosis
 from torq.config import settings
 from torq.ingest import search  # direct fallback
@@ -159,13 +154,12 @@ def _merge_sources(data: dict, extra: list[str]) -> None:
 
 def _diagnose_react(fault_code: str, machine: str, context: str) -> Diagnosis:
     """Reason/act loop: the LLM decides when to search manuals/history vs answer."""
-    # Imported lazily so a missing/broken install degrades to one-shot.
-    from langchain.agents import create_agent
     from langchain_core.tools import tool
     from langchain_openai import ChatOpenAI
+    from langgraph.prebuilt import create_react_agent
 
-    collected: list[str] = []  # source ids surfaced by tool calls this run
-    steps: list[str] = []  # ordered record of what the agent searched
+    collected: list[str] = []
+    steps: list[str] = []
 
     @tool
     def search_manuals(query: str) -> str:
@@ -189,7 +183,7 @@ def _diagnose_react(fault_code: str, machine: str, context: str) -> Diagnosis:
         base_url=settings.llm_base_url,
         temperature=0,
     )
-    agent = create_agent(model, [search_manuals, search_history], system_prompt=REACT_SYSTEM)
+    agent = create_react_agent(model, [search_manuals, search_history], system_message=REACT_SYSTEM)
     result = agent.invoke(
         {"messages": [("user", build_react_task(fault_code, machine, context))]},
         {"recursion_limit": settings.agent_max_steps * 2},
@@ -233,14 +227,12 @@ def _diagnose_oneshot(fault_code: str, machine: str, context: str) -> Diagnosis:
 # ── diagnosis cache ──────────────────────────────────────────────────────────
 
 # Recent diagnoses keyed by (machine, fault_code, context). A repeat fault with
-# the same context within the TTL reuses the cached result and skips the whole
-# reason/act loop. Context is part of the key so a recurring fault described
-# differently (new symptom text) re-diagnoses instead of reusing a stale answer.
-# No lock: dict read/write operations (get and set) are atomic and thread-safe
-# under the CPython GIL. A rare race just costs a redundant diagnosis, it never
-# corrupts the cache state.
+# the same context within the TTL reuses the cached result and skips the LLM
+# call. Context is part of the key so a recurring fault described differently
+# (new symptom text) re-diagnoses instead of reusing a stale answer.
+# TTL + maxsize eviction prevents unbounded memory growth.
 # Copies go in and out so a caller mutating a Diagnosis cannot poison the cache.
-_CACHE: dict[tuple[str, str, str], tuple[float, Diagnosis]] = {}
+_CACHE: TTLCache = TTLCache(maxsize=256, ttl=settings.diagnose_cache_ttl)
 
 
 # ── main entry point ─────────────────────────────────────────────────────────
@@ -249,12 +241,12 @@ _CACHE: dict[tuple[str, str, str], tuple[float, Diagnosis]] = {}
 def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis:
     """Cached multi-step (ReAct) diagnosis, falling back to single-shot on failure."""
     key = (machine, fault_code, context)
-    ttl = settings.diagnose_cache_ttl
-    if ttl > 0:
+
+    if settings.diagnose_cache_ttl > 0:
         hit = _CACHE.get(key)
-        if hit and time.monotonic() < hit[0]:
+        if hit is not None:
             log.info("Diagnosis cache hit for %s %s (reused, no LLM call)", machine, fault_code)
-            return hit[1].model_copy(deep=True)
+            return hit.model_copy(deep=True)
 
     try:
         diag = _diagnose_react(fault_code, machine, context)
@@ -273,6 +265,6 @@ def diagnose(fault_code: str, machine: str = "", context: str = "") -> Diagnosis
                 investigation=["Diagnosis service unreachable; work order created for manual handling."],
             )
 
-    if ttl > 0:
-        _CACHE[key] = (time.monotonic() + ttl, diag.model_copy(deep=True))
+    if settings.diagnose_cache_ttl > 0:
+        _CACHE[key] = diag.model_copy(deep=True)
     return diag

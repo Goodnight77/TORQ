@@ -4,7 +4,7 @@ import asyncio
 import json
 from datetime import datetime, timezone
 from typing import Any
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -128,9 +128,10 @@ def notify_work_order(wo_id: str) -> dict[str, Any]:
 
 
 @router.post("/work-orders/{wo_id}/outcome")
-def outcome(wo_id: str, o: OutcomeIn) -> WorkOrder:
+def outcome(wo_id: str, o: OutcomeIn, background_tasks: BackgroundTasks) -> WorkOrder:
     wo = feedback.record_outcome(
-        wo_id, o.resolved, o.actual_fix, o.notes, o.time_to_fix_min
+        wo_id, o.resolved, o.actual_fix, o.notes, o.time_to_fix_min,
+        background_tasks=background_tasks
     )
     if not wo:
         raise HTTPException(404, "work order not found")

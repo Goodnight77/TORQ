@@ -5,13 +5,15 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from torq.agent.diagnose import (
-    _diagnose_oneshot,
-    _diagnose_react,
-    _merge_sources,
-    diagnose,
-)
+import pytest
+
+from torq.agent.diagnose import _CACHE, _diagnose_oneshot, _diagnose_react, _merge_sources, diagnose
 from torq.agent.schemas import Diagnosis
+
+
+@pytest.fixture(autouse=True)
+def _clear_cache():
+    _CACHE.clear()
 
 
 def _msg(content: str) -> SimpleNamespace:
@@ -32,7 +34,7 @@ class TestMergeSources:
 
 class TestDiagnoseReact:
     @patch("langchain_openai.ChatOpenAI")
-    @patch("langchain.agents.create_agent")
+    @patch("langgraph.prebuilt.create_react_agent")
     def test_returns_diagnosis_with_injected_ids(self, mock_create, _mock_chat):
         """Final agent message is parsed; fault_code/machine come from the caller."""
         agent = MagicMock()
@@ -52,7 +54,7 @@ class TestDiagnoseReact:
         assert "REP-1" in result.sources
 
     @patch("langchain_openai.ChatOpenAI")
-    @patch("langchain.agents.create_agent")
+    @patch("langgraph.prebuilt.create_react_agent")
     def test_parses_fenced_json(self, mock_create, _mock_chat):
         agent = MagicMock()
         agent.invoke.return_value = {
@@ -102,3 +104,19 @@ class TestOneshot:
         assert result.root_cause == "worn seal"
         assert result.fault_code == "E-201"
         assert len(result.investigation) == 2  # manuals + history steps recorded
+
+
+class TestDiagnoseComplete:
+    @patch("torq.agent.diagnose._diagnose_oneshot")
+    @patch("torq.agent.diagnose._diagnose_react")
+    def test_both_paths_fail_returns_stub(self, mock_react, mock_oneshot):
+        mock_react.side_effect = RuntimeError("react failed")
+        mock_oneshot.side_effect = RuntimeError("oneshot also failed")
+
+        result = diagnose("E-201", "CNC-LatheA")
+
+        assert isinstance(result, Diagnosis)
+        assert result.root_cause == "Automated diagnosis unavailable - needs manual review"
+        assert result.confidence == 0.0
+        assert result.fault_code == "E-201"
+        assert result.machine == "CNC-LatheA"

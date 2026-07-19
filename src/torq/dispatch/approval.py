@@ -1,6 +1,10 @@
 """Supervisor approval queue: approve/reject before dispatch."""
 
+import logging
+
 from torq.agent.schemas import WorkOrder, _now
+
+log = logging.getLogger(__name__)
 from torq.db import models
 from torq.dispatch import notify, routing
 from torq.events import live
@@ -44,25 +48,11 @@ def approve(wo_id: str) -> tuple[WorkOrder, dict] | None:
         )
         return wo, {"channel": "none", "error": "no technician available"}
 
-    # Render PDF in a background thread to keep the supervisor approval response snappy
-    import threading
-
-    def _bg_render(work_order_id: str) -> None:
-        try:
-            work_order = models.get(work_order_id)
-            if work_order:
-                path = render_pdf(work_order)
-                work_order.pdf_path = str(path)
-                models.save(work_order)
-        except Exception as e:
-            print(f"[approval] background PDF render failed: {e}")
-
-    threading.Thread(
-        target=_bg_render,
-        args=(wo.id,),
-        name=f"pdf-render-{wo.id}",
-        daemon=True,
-    ).start()
+    try:
+        path = render_pdf(wo)
+        wo.pdf_path = str(path)
+    except Exception as e:
+        log.warning("PDF render failed for %s: %s", wo.id, e)
 
     delivery = notify.dispatch(wo, tech)
     wo.status = "dispatched"

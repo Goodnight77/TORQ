@@ -98,6 +98,48 @@ def index_docs(collection: str, docs: list[str], payloads: list[dict]) -> int:
     return len(docs)
 
 
+def upsert_document(collection: str, doc_id: str | int, doc: str, payload: dict) -> None:
+    """Upsert a single document into an existing collection (creates collection if missing)."""
+    client = get_client()
+    dense_vec = embed([doc])[0]
+    sparse_vec = _sparse(doc)
+
+    if not client.collection_exists(collection):
+        client.create_collection(
+            collection_name=collection,
+            vectors_config={
+                "dense": models.VectorParams(size=len(dense_vec), distance=models.Distance.COSINE)
+            },
+            sparse_vectors_config={"bm25": models.SparseVectorParams(modifier=models.Modifier.IDF)},
+        )
+        for field in _FILTER_FIELDS:
+            try:
+                client.create_payload_index(collection, field, models.PayloadSchemaType.KEYWORD)
+            except Exception:
+                pass
+
+    if isinstance(doc_id, str):
+        import uuid
+        try:
+            uuid_val = uuid.UUID(doc_id)
+            point_id = str(uuid_val)
+        except ValueError:
+            point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, doc_id))
+    else:
+        point_id = doc_id
+
+    client.upsert(
+        collection_name=collection,
+        points=[
+            models.PointStruct(
+                id=point_id,
+                vector={"dense": dense_vec, "bm25": sparse_vec},
+                payload={**payload, "document": doc},
+            )
+        ],
+    )
+
+
 def search(
     collection: str,
     query: str,

@@ -38,28 +38,33 @@ def _translate(en_text: str) -> dict[str, str]:
     """Translate the English work order to FR and AR in one LLM call."""
     if not settings.llm_api_key:
         return {}  # no key -> EN only (fallback)
-    client = OpenAI(api_key=settings.llm_api_key, base_url=settings.llm_base_url)
-    resp = client.chat.completions.create(
-        model=settings.llm_model,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "Translate the maintenance work order into French and Arabic. "
-                    "Keep fault codes, part numbers, and units unchanged. Reply with "
-                    'ONE JSON object only: {"fr": "...", "ar": "..."}'
-                ),
-            },
-            {"role": "user", "content": en_text},
-        ],
-        stream=False,
-        timeout=settings.translate_timeout,
-    )
-    raw = resp.choices[0].message.content.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```", 2)[1].lstrip("json").strip()
-    start, end = raw.find("{"), raw.rfind("}")
-    return json.loads(raw[start : end + 1]) if start != -1 else {}
+    try:
+        client = OpenAI(api_key=settings.llm_api_key, base_url=settings.llm_base_url)
+        resp = client.chat.completions.create(
+            model=settings.llm_model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Translate the maintenance work order into French and Arabic. "
+                        "Keep fault codes, part numbers, and units unchanged. Reply with "
+                        'ONE JSON object only: {"fr": "...", "ar": "..."}'
+                    ),
+                },
+                {"role": "user", "content": en_text},
+            ],
+            stream=False,
+            timeout=settings.translate_timeout,
+        )
+        raw = resp.choices[0].message.content.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```", 2)[1].lstrip("json").strip()
+        start, end = raw.find("{"), raw.rfind("}")
+        return json.loads(raw[start : end + 1]) if start != -1 else {}
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Translation failed (falling back to English): %s", e)
+        return {}
 
 
 def build_work_order(
