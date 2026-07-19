@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f0f0f">
+<title>TORQ — Report a Fault</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f0f; --surface: #1a1a1a; --border: #2a2a2a;
+    --text: #e8e8e8; --muted: #888; --accent: #e8e8e8;
+    --success: #2da44e; --danger: #cf222e;
+    --radius: 12px; --radius-sm: 8px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono: "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+  body {
+    font-family: var(--font); background: var(--bg); color: var(--text);
+    min-height: 100vh; display: flex; flex-direction: column;
+    line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  html[dir="rtl"] body { text-align: right; }
+
+  .container { max-width: 440px; margin: 0 auto; padding: 24px 20px; width: 100%; flex: 1; display: flex; flex-direction: column; }
+
+  .logo { font-weight: 900; font-size: 20px; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .logo span { color: var(--muted); }
+  .subtitle { font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group:last-of-type { margin-bottom: 20px; }
+  .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+
+  select, input, textarea {
+    width: 100%; padding: 12px 14px; font-size: 15px; font-family: var(--font);
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text); outline: none; -webkit-appearance: none; appearance: none;
+    transition: border-color 0.2s;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  html[dir="rtl"] select { background-position: left 14px center; padding-right: 14px; padding-left: 36px; }
+  select:focus, input:focus, textarea:focus { border-color: var(--text); }
+  textarea { resize: vertical; min-height: 60px; font-size: 14px; }
+
+  .fault-hints { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .fault-hint {
+    font-size: 11px; font-family: var(--mono); padding: 4px 10px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    color: var(--muted); cursor: pointer; transition: all 0.15s;
+  }
+  .fault-hint:active { border-color: var(--text); color: var(--text); }
+
+  .submit-btn {
+    width: 100%; padding: 14px; font-family: var(--font); font-weight: 700; font-size: 15px;
+    background: var(--text); color: var(--bg); border: none; border-radius: var(--radius-sm);
+    cursor: pointer; transition: opacity 0.2s; letter-spacing: 0.01em;
+  }
+  .submit-btn:disabled { opacity: 0.35; cursor: default; }
+  .submit-btn:active:not(:disabled) { opacity: 0.8; }
+
+  .submit-btn.loading { position: relative; color: transparent; pointer-events: none; }
+  .submit-btn.loading::after {
+    content: ""; position: absolute; inset: 50% 0 0 50%;
+    width: 20px; height: 20px; margin: -10px 0 0 -10px;
+    border: 2px solid var(--bg); border-top-color: transparent;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .success { display: none; text-align: center; padding: 40px 0; flex-direction: column; align-items: center; gap: 12px; }
+  .success.visible { display: flex; }
+  .success-icon { font-size: 48px; }
+  .success-title { font-size: 18px; font-weight: 700; }
+  .success-desc { font-size: 13px; color: var(--muted); }
+  .success-link { color: var(--text); font-size: 13px; text-decoration: underline; cursor: pointer; margin-top: 8px; }
+
+  .footer { text-align: center; font-size: 11px; color: var(--muted); padding: 20px 0; margin-top: auto; }
+  .footer span { opacity: 0.5; }
+
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f5f5f5; --surface: #fff; --border: #ddd; --text: #111; --muted: #777; }
+  }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <div class="logo">TORQ <span>· Report a fault</span></div>
+  <p class="subtitle">Select the machine, enter the fault code, and submit. The diagnosis and work order are generated automatically.</p>
+
+  <form class="card" id="faultForm" autocomplete="off">
+    <div class="form-group">
+      <label class="form-label" for="machineSelect">Machine</label>
+      <select id="machineSelect" required>
+        <option value="">Loading machines…</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="faultCodeInput">Fault code</label>
+      <input id="faultCodeInput" type="text" inputmode="text" placeholder="e.g. E-471" required autocomplete="off">
+      <div class="fault-hints" id="faultHints"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="contextInput">Context <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></label>
+      <textarea id="contextInput" placeholder="What do you see, hear, or smell?"></textarea>
+    </div>
+
+    <button class="submit-btn" type="submit" id="submitBtn">Submit fault report</button>
+  </form>
+
+  <div class="success" id="success">
+    <div class="success-icon">✓</div>
+    <div class="success-title">Fault reported</div>
+    <div class="success-desc" id="successMsg">Diagnosis in progress. Work order will be queued for supervisor review.</div>
+    <a class="success-link" onclick="resetForm()">Report another fault</a>
+  </div>
+</div>
+<div class="footer"><span>TORQ · Fault-to-Fix Engine</span></div>
+
+<script>
+const API = "/api";
+
+const machineSelect = document.getElementById("machineSelect");
+const faultCodeInput = document.getElementById("faultCodeInput");
+const contextInput = document.getElementById("contextInput");
+const form = document.getElementById("faultForm");
+const submitBtn = document.getElementById("submitBtn");
+const success = document.getElementById("success");
+const successMsg = document.getElementById("successMsg");
+
+let faultCodes = [];
+
+async function loadMachines() {
+  try {
+    const res = await fetch(API + "/machines");
+    const machines = await res.json();
+    machineSelect.innerHTML = '<option value="">Select machine…</option>'
+      + machines.map(m => `<option value="${m.id}">${m.id}</option>`).join("");
+  } catch (e) {
+    machineSelect.innerHTML = '<option value="">Could not load machines — try again</option>';
+  }
+}
+
+function renderHints() {
+  const container = document.getElementById("faultHints");
+  const selected = machineSelect.value;
+  const filtered = selected
+    ? faultCodes.filter(c => c.machine === selected)
+    : faultCodes;
+  container.innerHTML = filtered.length
+    ? filtered.map(c => `<span class="fault-hint" data-code="${c.fault_code}">${c.fault_code}</span>`).join("")
+    : '<span style="font-size:12px;color:var(--muted)">' + (selected ? "No known codes for this machine" : "Select a machine to see known codes") + '</span>';
+  container.querySelectorAll(".fault-hint").forEach(el => {
+    el.addEventListener("click", () => { faultCodeInput.value = el.dataset.code; });
+  });
+}
+
+async function loadFaultCodes() {
+  try {
+    const res = await fetch(API + "/fault-codes");
+    faultCodes = await res.json();
+    renderHints();
+  } catch (e) {
+    document.getElementById("faultHints").innerHTML = "";
+  }
+}
+
+machineSelect.addEventListener("change", renderHints);
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const machine = machineSelect.value;
+  const faultCode = faultCodeInput.value.trim();
+  const context = contextInput.value.trim();
+  if (!machine || !faultCode) return;
+
+  submitBtn.disabled = true;
+  submitBtn.classList.add("loading");
+
+  try {
+    const res = await fetch(API + "/faults", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fault_code: faultCode, machine, context, source: "manual" }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    form.style.display = "none";
+    success.classList.add("visible");
+  } catch (err) {
+    successMsg.textContent = "Error: " + err.message;
+    form.style.display = "none";
+    success.classList.add("visible");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.classList.remove("loading");
+  }
+});
+
+function resetForm() {
+  form.reset();
+  form.style.display = "";
+  success.classList.remove("visible");
+  machineSelect.value = "";
+  faultCodeInput.value = "";
+  contextInput.value = "";
+}
+
+loadMachines(); loadFaultCodes();
+</script>
+</body>
+</html>

@@ -19,18 +19,6 @@ const FIX = {
   time_to_fix_min: 30,
 };
 
-// Varied demo faults across skills (E=electromechanical, J=packaging, C/P/A=general)
-// so repeated clicks exercise different machines and route to different techs.
-const SIM_FAULTS = [
-  { fault_code: "E-471", machine: "CM-350 Line 2", context: "Motor tripped after hours running." },
-  { fault_code: "E-201", machine: "CM-350 Line 1", context: "Overcurrent on start, grinding noise." },
-  { fault_code: "J-108", machine: "PK-9 Line 3", context: "Film feed jammed at the roller nip." },
-  { fault_code: "J-233", machine: "PK-9 Line 3", context: "Seal temperature low, weak seals." },
-  { fault_code: "C-207", machine: "Chiller 6", context: "Condenser water flow dropping, efficiency down." },
-  { fault_code: "P-410", machine: "Pump 3", context: "High vibration and bearing noise." },
-  { fault_code: "A-120", machine: "AHU 2", context: "Filter differential pressure over setpoint." },
-];
-
 function Tile({ label, value }) {
   return (
     <div className={styles.tile}>
@@ -42,6 +30,12 @@ function Tile({ label, value }) {
 
 function Badge({ status }) {
   return <span className={`${styles.badge} ${styles[status] || ""}`}>{status}</span>;
+}
+
+function SourceBadge({ source }) {
+  if (!source) return null;
+  const icon = source === "manual" ? "👤" : "📡";
+  return <span className={`${styles.sourceBadge} ${styles[`source_${source}`] || ""}`}>{icon} {source}</span>;
 }
 
 // A work order is "open" until it reaches a terminal state.
@@ -548,35 +542,39 @@ function StatusFilter({ value, onChange, t }) {
 }
 
 function ManualFaultForm({ onReport, busy, t }) {
-  const [open, setOpen] = useState(false);
   const [machine, setMachine] = useState("");
   const [faultCode, setFaultCode] = useState("");
   const [context, setContext] = useState("");
+  const [machines, setMachines] = useState([]);
+
+  useEffect(() => {
+    api.getMachines().then(setMachines).catch(() => {});
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!machine || !faultCode) return;
-    onReport({ machine, fault_code: faultCode, context });
+    onReport({ machine, fault_code: faultCode, context, source: "manual" });
     setMachine("");
     setFaultCode("");
     setContext("");
-    setOpen(false);
   };
 
   return (
     <div className={styles.manualForm}>
-      <button className={styles.manualFormToggle} onClick={() => setOpen(!open)}>
-        {open ? "−" : "+"} {t("dashboard.report_fault")}
-      </button>
-      {open && (
-        <form className={styles.manualFormBody} onSubmit={handleSubmit}>
-          <input
+      <form className={styles.manualFormBody} onSubmit={handleSubmit}>
+        <div className={styles.manualFormRow}>
+          <select
             className={styles.manualFormInput}
-            placeholder={t("dashboard.machine_placeholder")}
             value={machine}
             onChange={(e) => setMachine(e.target.value)}
             required
-          />
+          >
+            <option value="">{t("dashboard.machine_placeholder")}</option>
+            {machines.map((m) => (
+              <option key={m.id} value={m.id}>{m.id}</option>
+            ))}
+          </select>
           <input
             className={styles.manualFormInput}
             placeholder={t("dashboard.fault_code_placeholder")}
@@ -584,18 +582,17 @@ function ManualFaultForm({ onReport, busy, t }) {
             onChange={(e) => setFaultCode(e.target.value)}
             required
           />
-          <textarea
+          <input
             className={styles.manualFormInput}
             placeholder={t("dashboard.context_placeholder")}
             value={context}
             onChange={(e) => setContext(e.target.value)}
-            rows={2}
           />
           <button className={styles.approveBtn} type="submit" disabled={busy}>
             {t("dashboard.submit_fault")}
           </button>
-        </form>
-      )}
+        </div>
+      </form>
     </div>
   );
 }
@@ -675,12 +672,6 @@ export default function Dashboard() {
     }
   };
 
-  const simulate = () =>
-    act(
-      () => api.reportFault(SIM_FAULTS[Math.floor(Math.random() * SIM_FAULTS.length)]),
-      t("dashboard.toast_simulated")
-    );
-
   const sortedFaults = useMemo(() => {
     return [...all]
       .filter((w) => w.created_at)
@@ -730,7 +721,7 @@ export default function Dashboard() {
               &nbsp;Knowledge Base: <span className={health.integrations?.qdrant?.connected ? styles.textGreen : styles.textRed}>●</span>
               &nbsp;AI Diagnostics: <span className={health.integrations?.llm?.connected ? styles.textGreen : styles.textRed}>●</span>
               &nbsp;WhatsApp Gateway: <span className={health.integrations?.twilio_whatsapp?.connected ? styles.textGreen : styles.textRed}>●</span>
-              &nbsp;Telemetry Feed: <span className={health.integrations?.mqtt_broker?.connected ? styles.textGreen : styles.textRed}>●</span>
+              &nbsp;Telemetry Feed: <span className={health.integrations?.mqtt_broker?.configured ? (health.integrations?.mqtt_broker?.connected ? styles.textGreen : styles.textRed) : styles.textMuted}>●</span>
             </span>
           </div>
         )}
@@ -785,11 +776,17 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className={styles.actionRow}>
-          <button className={styles.simBtn} disabled={busy || loading} onClick={simulate}>
-            {t("dashboard.simulate")}
-          </button>
-          <ManualFaultForm onReport={(msg) => act(() => api.reportFault(msg), t("dashboard.toast_simulated"))} busy={busy} t={t} />
+        <div className={styles.manualFormSection}>
+          <div className={styles.manualFormLabel}>{t("dashboard.report_fault")}</div>
+          <p className={styles.manualFormHint}>{t("dashboard.manual_form_hint")}</p>
+          <div className={styles.manualFormQuickWrap}>
+            <ManualFaultForm onReport={(msg) => act(() => api.reportFault(msg), t("dashboard.toast_fault_reported"))} busy={busy} t={t} />
+            <a href="/operator/report" className={styles.operatorLink} target="_blank" rel="noreferrer">
+              <span className={styles.operatorLinkIcon}>📱</span>
+              <span className={styles.operatorLinkText}>{t("dashboard.operator_link")}</span>
+              <span className={styles.operatorLinkHint}>{t("dashboard.operator_link_hint")}</span>
+            </a>
+          </div>
         </div>
 
         <h2 className={styles.sectionTitle}>{t("dashboard.pending")}</h2>
@@ -824,7 +821,7 @@ export default function Dashboard() {
                   <tr key={w.id}>
                     <td><a className={styles.link} onClick={() => setSelected(w)}>{w.id}</a></td>
                     <td>{w.machine ? <a className={styles.link} onClick={() => setMachineDetail(w.machine)}>{w.machine}</a> : "-"}</td>
-                    <td>{w.fault_code} <ConfidenceBadge confidence={w.confidence} t={t} /></td>
+                    <td>{w.fault_code} <SourceBadge source={w.source} /> <ConfidenceBadge confidence={w.confidence} t={t} /></td>
                     <td className={styles.cause}>{w.root_cause}</td>
                     <td className={styles.actions}>
                       <button className={styles.approveBtn} disabled={busy} onClick={() => act(() => api.approve(w.id), `${t("dashboard.toast_approved")} — ${w.id}`)}>
@@ -895,7 +892,7 @@ export default function Dashboard() {
                   <tr key={w.id}>
                     <td><a className={styles.link} onClick={() => setSelected(w)}>{w.id}</a></td>
                     <td>{w.machine ? <a className={styles.link} onClick={() => setMachineDetail(w.machine)}>{w.machine}</a> : "-"}</td>
-                    <td>{w.fault_code}</td>
+                    <td>{w.fault_code} <SourceBadge source={w.source} /></td>
                     <td><Badge status={w.status} /></td>
                     <td>{w.assigned_to || "-"}</td>
                     <td>

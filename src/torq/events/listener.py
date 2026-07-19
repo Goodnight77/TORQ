@@ -39,6 +39,7 @@ def handle_payload(payload: bytes) -> WorkOrder | None:
         machine=event.machine_id,
         context=event.context,
         fault_arrived_at=arrival,
+        source="mqtt",
     )
     sev = MachineFaultEvent.SEVERITY_LABELS.get(event.severity, "unknown")
     print(

@@ -21,13 +21,25 @@
 
 TORQ is an event-driven predictive-maintenance engine that turns machine faults into grounded diagnoses, approval-ready work orders, and technician dispatches.
 
-A fault arrives over REST or MQTT. TORQ retrieves relevant OEM guidance and past repairs, asks an OpenAI-compatible model for a structured diagnosis, creates an English/French/Arabic work order, and queues it for supervisor review. Resolved repairs return to the knowledge base so the next diagnosis can reuse what worked.
+A fault arrives — from a floor operator, a REST API call, or an MQTT event. TORQ retrieves relevant OEM guidance and past repairs, asks an OpenAI-compatible model for a structured diagnosis, creates an English/French/Arabic work order, and queues it for supervisor review. Resolved repairs return to the knowledge base so the next diagnosis can reuse what worked.
+
+### Three-tier fault ingestion
+
+TORQ is designed to work in plants with *any* level of digital connectivity. Faults enter through one of three tiers, each tagged with a `source` label visible in the dashboard:
+
+| Tier | Method | source tag | Hardware needed | For plants that… |
+|------|--------|------------|-----------------|------------------|
+| **1 — Manual** | Dashboard form or REST `POST /api/faults` | `manual` | None | Have no digital machine connectivity at all — operators report what they see, hear, or smell. |
+| **2 — REST API** | Any system that can `POST /api/faults` | `rest` | Existing IT systems | Already use a CMMS, ERP, or custom maintenance tool that can emit fault events. |
+| **3 — MQTT** | MQTT broker subscription | `mqtt` | ESP32 bridge (~$20) or existing SCADA | Want automated ingestion — a $20 ESP32 with clamp-on sensors bridges legacy machines to the broker, or modern PLCs publish directly to MQTT. |
+
+**Tier 1 is the default.** No retrofitting, no sensors, no PLC integration required. The dashboard's fault-report form is the primary ingestion path. Tiers 2 and 3 layer on as plants grow their digital footprint.
 
 ## Why TORQ?
 
 | Traditional maintenance flow | TORQ |
 | --- | --- |
-| Faults wait to be noticed and triaged | REST and MQTT fault ingestion starts the workflow immediately |
+| Faults wait to be noticed and triaged | Operators report faults from the dashboard in seconds — REST and MQTT are optional add-ons |
 | Technicians search manuals and logs by hand | Dense + BM25 retrieval surfaces relevant guidance and repair history |
 | Diagnosis quality depends on who is available | Structured, source-aware AI diagnosis creates a consistent starting point |
 | Work orders are manually written and translated | Approval-ready EN/FR/AR work orders and PDFs are generated automatically |
@@ -139,7 +151,7 @@ When a repair is marked resolved, TORQ records the actual fix, technician notes,
 
 ### Supervisor and operations views
 
-The built-in dashboard supports fault simulation, approval, rejection, resolution, and downtime metrics. A separate React dashboard adds work-order details, multilingual content, PDF downloads, retrieval evaluation charts, and an editable ROI calculator.
+The built-in dashboard supports manual fault reporting, approval, rejection, resolution, and downtime metrics. A separate React dashboard adds work-order details, multilingual content (with source badges — manual vs. mqtt), PDF downloads, retrieval evaluation charts, and an editable ROI calculator.
 
 ### Multiple integration surfaces
 

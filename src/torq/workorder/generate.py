@@ -68,7 +68,8 @@ def _translate(en_text: str) -> dict[str, str]:
 
 
 def build_work_order(
-    diag: Diagnosis, translate: bool = True, fault_arrived_at: str | None = None
+    diag: Diagnosis, translate: bool = True, fault_arrived_at: str | None = None,
+    source: str = "manual",
 ) -> WorkOrder:
     en = _render_en(diag)
     content = {"en": en}
@@ -88,5 +89,6 @@ def build_work_order(
         investigation=diag.investigation,
         content=content,
         confidence=diag.confidence,
+        source=source,
         fault_arrived_at=fault_arrived_at,
     )
